@@ -73,7 +73,7 @@ int main(int argc, char **argv) {
             }
             writeImage(gradientMagnitude, "gradMagnitude.pgm");
             writeImage(gradientphase, "gradPhase.pgm");
-            outputImage = copyImage(gradientMagnitude);
+            outputImage = copyImage(gradientMagnitude, true);
             destroyImage(&gradientMagnitude);
             destroyImage(&gradientphase);
         }
