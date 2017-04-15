@@ -67,7 +67,13 @@ foreach( demosourcefile ${LIBFL_DEMO} )
     message(STATUS "\t${demosourcefile}")
 
     add_executable( ${demoname} ${demosourcefile})
-    target_link_libraries( ${demoname} libfl ${LAPACK_LIBRARIES} ${CBLAS_LIBRARIES} stdc++)
+    target_link_libraries( ${demoname} libfl
+        ${LAPACK_LIBRARIES}
+        ${CBLAS_LIBRARIES} 
+        stdc++
+        png
+        jpeg
+    )
 
     #install(TARGETS ${demoname} RUNTIME DESTINATION bin)
 
