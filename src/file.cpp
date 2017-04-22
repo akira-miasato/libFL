@@ -3,7 +3,6 @@
 DirectoryManager *loadDirectory(const char *dir_pathname, size_t hier_levels) {
     DirectoryManager *dir = NULL;
 
-
     if (pathnameExists(dir_pathname)) {
         // it is really a directory and it exists
         if (directoryExists(dir_pathname)) {
@@ -19,11 +18,11 @@ DirectoryManager *loadDirectory(const char *dir_pathname, size_t hier_levels) {
         }
             // it is a File instead of a Directory
         else {
-            printf("Pathname \"%s\" is a File", dir_pathname);
+            printf("Pathname \"%s\" is a File\n", dir_pathname);
         }
     }
     else {
-        printf("Pathname \"%s\" does not exist!", dir_pathname);
+        printf("Pathname \"%s\" does not exist!\n", dir_pathname);
     }
 
     return dir;

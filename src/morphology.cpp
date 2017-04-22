@@ -216,7 +216,6 @@ float *applyGranulometryOnImage(GrayImage *image, float startRadius, float endRa
     int n2 = 0;
     int n=0;
 
-
     while(radius2 < endRadius){
         n2 = countNumberAdjacentsInCircle(radius2);
         if(n2 > n1){
@@ -253,8 +252,6 @@ float *applyGranulometryOnImage(GrayImage *image, float startRadius, float endRa
         }
         radius2 += step;
     }
-
-
 
     return featureVector;
 }

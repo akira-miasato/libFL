@@ -23,7 +23,15 @@ typedef struct _bagOfVisualWords {
 } BagOfVisualWords;
 
 FeatureMatrix* computeFeatureVectors(Image* imagePack, int patchSize);
-FeatureMatrix* computeFeatureVectors(DirectoryManager* directoryManager, int patchSize);
+FeatureMatrix* sampleHistograms(DirectoryManager* directoryManager,
+                                int patch_x, int patch_y,
+                                double sampling_factor,
+                                int binSize=64, int seed=0);
+FeatureMatrix* sampleBoW(DirectoryManager* directoryManager,
+                         FeatureMatrix* dictionary,
+                         int patch_x, int patch_y,
+                         double sampling_factor,
+                         int binSize=64, int seed=0);
 FeatureMatrix* kMeansClustering(FeatureMatrix* featureMatrix, int numberOfCluster);
 
 

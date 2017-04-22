@@ -6,7 +6,7 @@ int main(int argc, char **argv) {
 
     int patchSize = 8;
     DirectoryManager* directoryManager = loadDirectory("../data/objects", 1);
-    FeatureMatrix* featureMatrix = computeFeatureVectors(directoryManager, patchSize);
+    FeatureMatrix* featureMatrix = computeHistogramPatches(directoryManager, patchSize);
 
     double time = omp_get_wtime() - start_time;
     printf("rows:%d cols:%d time:%f\n",featureMatrix->nFeaturesVectors,featureMatrix->featureVector[0]->size, time);

@@ -11,8 +11,8 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -Og")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -Og")
 
 find_package(Threads REQUIRED)
 
@@ -54,10 +54,6 @@ file(GLOB LIBFL_DEMO
 
     demo/*.cpp
     )
-
-install(FILES ${LIBFL_INCLUDE}
-        DESTINATION include
-        )
  
 message(STATUS "Demo files")
 foreach( demosourcefile ${LIBFL_DEMO} )
@@ -74,14 +70,4 @@ foreach( demosourcefile ${LIBFL_DEMO} )
         png
         jpeg
     )
-
-    #install(TARGETS ${demoname} RUNTIME DESTINATION bin)
-
-    #remove demo from make all
-    #set_target_properties(${demoname} PROPERTIES EXCLUDE_FROM_ALL 1 EXCLUDE_FROM_DEFAULT_BUILD 1)
-endforeach( demosourcefile ${LIBFL_DEMO} )
-
-install (TARGETS libfl
-         ARCHIVE DESTINATION libfl
-         LIBRARY DESTINATION libfl
-        )#RUNTIME DESTINATION bin)
+endforeach( demosourcefile ${LIBFL_DEMO})
