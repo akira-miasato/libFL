@@ -1,6 +1,6 @@
 #libFL CMAKE
 
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 2.8.12.2)
 
 project(libFL)
 
@@ -10,7 +10,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-
+add_definitions(-std=c++11 -fpermissive)
 find_package(Threads REQUIRED)
 
 message(STATUS ${CMAKE_MODULE_PATH})

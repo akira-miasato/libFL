@@ -947,7 +947,7 @@ Image *readImagePNG(char *filename){
         return image;
     }
     fread(header, 1, 8, fp);
-    if (png_sig_cmp(((png_const_bytep)header), 0, 8)){
+    if (png_sig_cmp(((const png_byte*)header), 0, 8)){
         printf("[read_png_file] File %s is not recognized as a PNG file\n",filename);
         return image;
     }
@@ -1173,14 +1173,14 @@ Image *readImageJPEG(char *filename){
         image->colorSpace = CMYK;
     }else if(cinfo.out_color_space == JCS_YCCK){
         image->colorSpace = CMYK;
-    } else if(cinfo.out_color_space == JCS_BG_RGB){
-        printf("[readImageJPEG] big gamut R/G/B not implemented yet, image color space will be set to RGB\n");
-        image->colorSpace = RGB;
-        //return NULL;
-    }else if(cinfo.out_color_space == JCS_BG_YCC){
-        printf("[readImageJPEG] big gamut Y/Cb/Cr not implemented yet, image color space will be set to YCbCr\n");
-        image->colorSpace = YCbCr;
-        //return NULL;
+//     } else if(cinfo.out_color_space == JCS_BG_RGB){
+//         printf("[readImageJPEG] big gamut R/G/B not implemented yet, image color space will be set to RGB\n");
+//         image->colorSpace = RGB;
+//         //return NULL;
+//     }else if(cinfo.out_color_space == JCS_BG_YCC){
+//         printf("[readImageJPEG] big gamut Y/Cb/Cr not implemented yet, image color space will be set to YCbCr\n");
+//         image->colorSpace = YCbCr;
+//         //return NULL;
     }else{
         printf("[readImageJPEG] unknown color space\n");
         image->colorSpace = UNKNOWN;

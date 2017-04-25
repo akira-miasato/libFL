@@ -26,7 +26,7 @@ FeatureMatrix* computeFeatureVectors(Image* imagePack, int patchSize);
 FeatureMatrix* sampleHistograms(DirectoryManager* directoryManager,
                                 int patch_x, int patch_y,
                                 double sampling_factor,
-                                int binSize=64, int seed=0);
+                                int binSize=32, int seed=0);
 FeatureMatrix* sampleHistogramBoW(DirectoryManager* directoryManager,
                          FeatureMatrix* dictionary,
                          int patch_x, int patch_y,
