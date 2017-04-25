@@ -8,66 +8,8 @@
 #include <limits>
 #include <utility>
 
-#include "featureVector.h"
+#include "kNearestNeighbours.h"
 #include "bagOfVisualWords.h"
-
-int moda(std::vector<std::pair<float, int> > vec){
-    int max = 0;
-    for(int i=0; i<vec.size(); i++){
-        if(vec[i].second > max){
-            max = vec[i].second;
-        }
-    }
-    max++;
-    std::vector<int> n(max);
-    for(int i=0; i<max; i++){
-        n[i] = 0;
-    }
-    for(int i=0; i<vec.size(); i++){
-        n[vec[i].second]++;
-    }
-    int ret = 0;
-    int argret = 0;
-    for(int i=0; i<max; i++){
-        if(n[i] > argret){
-            ret = i;
-            argret = n[i];
-        }
-    }
-    return ret;
-}
-
-bool comp_tuple(std::pair<float, int> i,
-                std::pair<float, int> j){
-    return(i.first < j.first);
-}
-
-std::vector<int> knn(FeatureMatrix* target, FeatureMatrix* trainX, std::vector<int> trainY, int k){
-    if(trainX->nFeaturesVectors != trainY.size()){
-        throw std::runtime_error("X and Y from train ref mismatch!\n");
-    }
-    std::vector<int> ret(target->nFeaturesVectors);
-    std::vector<std::pair<float, int> > dist_pos(trainX->nFeaturesVectors);
-    int label;
-    float d, di;
-    for(int i=0; i<target->nFeaturesVectors; i++){
-        d = std::numeric_limits<float>::max();
-        for(int j=0; j<trainX->nFeaturesVectors; j++){
-            di = vectorEuclideanDistance(
-              trainX->featureVector[j],
-              target->featureVector[i]
-            );
-            dist_pos[j].first = di;
-            dist_pos[j].second = trainY[j];
-        }
-        std::sort(dist_pos.begin(), dist_pos.end(), comp_tuple);
-        std::vector<std::pair<float, int> > knearest(
-            dist_pos.begin(), dist_pos.begin() + k  
-        );
-        ret[i] = moda(knearest);
-    }
-    return ret;
-}
 
 int main(int argc, char **argv) {
     using namespace std;
@@ -149,12 +91,14 @@ int main(int argc, char **argv) {
     
     
     // KNN with raw histograms
-     start_time = omp_get_wtime();
+    featureMatrix->nFeaturesVectors = 1;
+    start_time = omp_get_wtime();
     std::vector<int> pred = knn(
         featureMatrixDev,
         featureMatrix,
         labelVector,
-        1
+        1,
+        vectorCosineDistance
     );
 
     double acc = 0;
@@ -170,7 +114,7 @@ int main(int argc, char **argv) {
     // KMeansClustering
     start_time = omp_get_wtime();
     float loss;
-    FeatureMatrix *dict = kMeansClustering(featureMatrix, 5, &loss);
+    FeatureMatrix *dict = kMeansClustering(featureMatrix, 1, &loss);
     time = omp_get_wtime() - start_time;
     printf("rows:%d cols:%d time:%f\n",
            dict->nFeaturesVectors,
