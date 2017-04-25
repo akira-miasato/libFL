@@ -52,7 +52,7 @@ FeatureMatrix* concatFeatureMatrices(FeatureMatrix* featureMatrix1, FeatureMatri
 /*
  * Funções de distância
  */
-float vectorDifference(FeatureVector* vector1,FeatureVector* vector2); // Minkowsky
+float vectorManhattanDistance(FeatureVector* vector1,FeatureVector* vector2); // Minkowsky
 float vectorEuclideanDistance(FeatureVector* vector1,FeatureVector* vector2);
 float vectorCosineDistance(FeatureVector* vector1,FeatureVector* vector2);
 

@@ -2,6 +2,9 @@
 // Created by deangeli on 4/7/17.
 //
 #include <random>
+#include <stdexcept>
+#include <limits>
+#include "featureVector.h"
 #include "bagOfVisualWords.h"
 
 
@@ -79,22 +82,15 @@ FeatureMatrix* sampleHistograms(DirectoryManager* directoryManager,
 }
 
 
-FeatureMatrix* sampleBoW(DirectoryManager* directoryManager,
+FeatureMatrix* sampleHistogramBoW(DirectoryManager* directoryManager,
                          FeatureMatrix* dictionary,
                          int patch_x, int patch_y,
                          double sampling_factor,
                          int binSize, int seed){
     srand(seed);
-    Image* firstImage = readImage(directoryManager->files[0]->path);
-    int patchX_axis = firstImage->nx - patch_x + 1;
-    int patchY_axis = firstImage->ny - patch_y + 1;
-    int numberPatchsPerImage = patchX_axis * patchY_axis;
-    int numberPatchs = numberPatchsPerImage*directoryManager->nfiles;
-    
-    // Alocates enough memory, but final number of samples will be smaller
-    FeatureMatrix* featureMatrix = createFeatureMatrix(numberPatchs * 2 * sampling_factor);
 
-    destroyImage(&firstImage);
+    FeatureMatrix* featureMatrix = createFeatureMatrix(directoryManager->nfiles);
+
     int k = 0;
     double r;
     Image* patch;
@@ -155,13 +151,19 @@ FeatureMatrix* computeFeatureVectors(Image* imagePack, int patchSize){
     return featureMatrix;
 }
 
-FeatureMatrix* kMeansClustering(FeatureMatrix* featureMatrix, int numberOfCluster){
+FeatureMatrix* kMeansClustering(FeatureMatrix* featureMatrix,
+                                int numberOfCluster,
+                                float* loss,
+                                int numIter){
     FeatureMatrix* dict = createFeatureMatrix(numberOfCluster);
-    int k = 0;
+    int i=0, j=0, k=0;
+    int randomIndex;
+    int dim = featureMatrix->featureVector[0]->size;
     bool *isUsed = (bool*)calloc(featureMatrix->nFeaturesVectors,sizeof(*isUsed));
     int* labels = (int*)calloc(featureMatrix->nFeaturesVectors,sizeof(*labels));
+    int* counts = (int*)calloc(numberOfCluster, sizeof(*counts));
     while (k < numberOfCluster) {
-        int randomIndex = RandomInteger(0,featureMatrix->nFeaturesVectors);
+        randomIndex = RandomInteger(0, featureMatrix->nFeaturesVectors-1);
         if(isUsed[randomIndex] == false){
             dict->featureVector[k] = copyFeatureVector(featureMatrix->featureVector[randomIndex]);
             isUsed[randomIndex] = true;
@@ -169,11 +171,99 @@ FeatureMatrix* kMeansClustering(FeatureMatrix* featureMatrix, int numberOfCluste
         }
     }
     free(isUsed);
-    //not finished yet
+    
+    float d, di;
+    for(int iter=0; iter < numIter; iter++){
+        // Maximization
+        *loss = 0;
+        d = std::numeric_limits<float>::max();
+        for(i=0; i<featureMatrix->nFeaturesVectors; i++){
+            for(j=0; j<numberOfCluster; j++){
+                di = vectorEuclideanDistance(featureMatrix->featureVector[i],
+                                             dict->featureVector[j]);
+//                 if(di == 0){
+//                     for(k=0; k<dim; k++){
+//                         printf("%f ", featureMatrix->featureVector[i]->features[k]);
+//                     }
+//                     printf("\n");
+//                     for(k=0; k<dim; k++){
+//                         printf("%f ", dict->featureVector[j]->features[k]);
+//                     }
+//                     printf("\n");
+//                 }
+                if(di < d){
+                    d = di;
+                    labels[i] = j;
+                }
+            }
+            *loss += d;
+        }
+        // Expectation
+        for(j=0; j<numberOfCluster; j++){
+            counts[j] = 0; // Zeroing counts
+            for(k=0; k<dim; k++){
+                dict->featureVector[j]->features[k] = 0; // Reinitializing centroids
+            }
+        }
+        for(i=0; i<featureMatrix->nFeaturesVectors; i++){
+            j = labels[i];
+            counts[j]++;
+            // Summing all points from same clusters
+            for(k=0; k<dim; k++){
+                dict->featureVector[j]->features[k] +=
+                    featureMatrix->featureVector[i]->features[k];
+            }
+        }
+        for(j=0; j<numberOfCluster; j++){
+            if(counts[j] == 0){ // If empty cluster, assign random point as centroid
+                randomIndex = RandomInteger(0, featureMatrix->nFeaturesVectors-1);
+                destroyFeatureVector(&(dict->featureVector[j]));
+                dict->featureVector[j] = copyFeatureVector(featureMatrix->featureVector[randomIndex]);
+            }
+            else{
+                // Averaging points by counts
+                for(k=0; k<dim; k++){
+                    dict->featureVector[j]->features[k] /= counts[j];
+                }
+            }
+        }
+    }
+    return dict;
+}
 
 
+FeatureVector* computeSoftVBoW(FeatureVector* fv, FeatureMatrix* dict){
+    if(fv == NULL || dict == NULL){
+        throw std::runtime_error("NULL arg error!\n");
+    }
+    if(fv->size != dict->featureVector[0]->size){
+        throw std::runtime_error("Trying to extract vbow of vector from dict of different dim!\n");
+    }
+    FeatureVector* vbow = createFeatureVector(dict->nFeaturesVectors);
+    for(int i=0; i<dict->nFeaturesVectors; i++){
+        vbow->features[i] = 1 - vectorCosineDistance(fv, dict->featureVector[i]);
+    }
+    return vbow;
+}
 
 
-
-    return NULL;
+FeatureVector* computeHardVBoW(FeatureVector* fv, FeatureMatrix* dict, float th){
+    if(fv == NULL || dict == NULL){
+        throw std::runtime_error("NULL arg error!\n");
+    }
+    if(fv->size != dict->featureVector[0]->size){
+        throw std::runtime_error("Trying to extract vbow of vector from dict of different dim!\n");
+    }
+    FeatureVector* vbow = createFeatureVector(dict->nFeaturesVectors);
+    float diff;
+    for(int i=0; i<dict->nFeaturesVectors; i++){
+        diff = vectorManhattanDistance(fv, dict->featureVector[i]);
+        if(diff < th){
+            vbow->features[i] = 1;
+        }
+        else{
+            vbow->features[i] = 0;
+        }
+    }
+    return vbow;
 }

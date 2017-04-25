@@ -27,12 +27,15 @@ FeatureMatrix* sampleHistograms(DirectoryManager* directoryManager,
                                 int patch_x, int patch_y,
                                 double sampling_factor,
                                 int binSize=64, int seed=0);
-FeatureMatrix* sampleBoW(DirectoryManager* directoryManager,
+FeatureMatrix* sampleHistogramBoW(DirectoryManager* directoryManager,
                          FeatureMatrix* dictionary,
                          int patch_x, int patch_y,
                          double sampling_factor,
                          int binSize=64, int seed=0);
-FeatureMatrix* kMeansClustering(FeatureMatrix* featureMatrix, int numberOfCluster);
+FeatureMatrix* kMeansClustering(FeatureMatrix* featureMatrix,
+                                int numberOfCluster,
+                                float* loss,
+                                int numIter=20);
 
 
 

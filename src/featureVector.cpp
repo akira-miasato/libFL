@@ -83,10 +83,9 @@ void wirteFeatureVectors(FeatureVector** vectors, int nVectors, char *filename){
 }
 
 
-float vectorDifference(FeatureVector* vector1,FeatureVector* vector2){
+float vectorManhattanDistance(FeatureVector* vector1,FeatureVector* vector2){
     if(vector1->size != vector2->size){
-        printf("vectors mismatch dimensions\n");
-        return -1.0;
+        throw std::runtime_error("vectors mismatch dimensions\n");
     }
     float difference = 0;
     FeatureVector* vector = createFeatureVector(vector1->size);
@@ -97,8 +96,6 @@ float vectorDifference(FeatureVector* vector1,FeatureVector* vector2){
             diff *= -1;
         }
         vector->features[i] = diff;
-        //vector->features[i] = (vector1->features[i]-vector2->features[i])*(vector1->features[i]-vector2->features[i]);
-        //vector->features[i] = sqrtf(vector->features[i]);
         difference += vector->features[i];
     }
     destroyFeatureVector(&vector);
@@ -108,8 +105,7 @@ float vectorDifference(FeatureVector* vector1,FeatureVector* vector2){
 
 float vectorEuclideanDistance(FeatureVector* vector1,FeatureVector* vector2){
     if(vector1->size != vector2->size){
-        printf("vectors mismatch dimensions\n");
-        return -1.0;
+        throw std::runtime_error("vectors mismatch dimensions\n");
     }
     float difference = 0;
     float diff;
@@ -124,8 +120,7 @@ float vectorEuclideanDistance(FeatureVector* vector1,FeatureVector* vector2){
 
 float vectorCosineDistance(FeatureVector* vector1,FeatureVector* vector2){
     if(vector1->size != vector2->size){
-        printf("vectors mismatch dimensions\n");
-        return -1.0;
+        throw std::runtime_error("vectors mismatch dimensions\n");
     }
     float difference = 0;
     float prod, norm1 = 0, norm2 = 0;
