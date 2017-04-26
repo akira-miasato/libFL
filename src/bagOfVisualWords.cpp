@@ -91,30 +91,43 @@ FeatureMatrix* sampleHistogramBoW(DirectoryManager* directoryManager,
 
     FeatureMatrix* featureMatrix = createFeatureMatrix(directoryManager->nfiles);
 
-    int k = 0;
+    int k;
+    int dim = dictionary->nFeaturesVectors;
     double r;
     Image* patch;
+    FeatureVector* patch_hist = NULL;
+    FeatureVector* patch_vbow = NULL;
 
 // #pragma omp parallel for
     for (size_t fileIndex = 0; fileIndex < directoryManager->nfiles; ++fileIndex) {
         Image* currentImage = readImage(directoryManager->files[fileIndex]->path);
+        featureMatrix->featureVector[fileIndex] = createFeatureVector(dim);
+        k = 0;
         for (int y = 0; y <= currentImage->ny - patch_y; ++y) {
             for (int x = 0; x <= currentImage->nx - patch_x; ++x) {
                 r = (double)rand() / RAND_MAX; 
                 if(r < sampling_factor){
                     patch = extractSubImage(currentImage, x, y,
                                             patch_x, patch_y, true);
-                    featureMatrix->featureVector[k] = computeHistogramForFeatureVector(patch, binSize, true);
+                    if(patch_hist) destroyFeatureVector(&patch_hist);
+                    if(patch_vbow) destroyFeatureVector(&patch_vbow);
+                    patch_hist = computeHistogramForFeatureVector(patch, binSize, true);
+                    patch_vbow = computeSoftVBoW(patch_hist, dictionary);
+                    for(int col=0; col<dim; col++){
+                        featureMatrix->featureVector[fileIndex]->features[col] +=
+                            patch_vbow->features[col];
+                    }
                     k++;
                     destroyImage(&patch);
                 }
             }
         }
+        for(int col=0; col<dim; col++){
+            featureMatrix->featureVector[fileIndex]->features[col] /= k;
+        }
         destroyImage(&currentImage);
     }
 
-    // Smaller than allocated memory, but shouldn't be an issue
-    featureMatrix->nFeaturesVectors = k;
     return featureMatrix;
 }
 
@@ -181,16 +194,6 @@ FeatureMatrix* kMeansClustering(FeatureMatrix* featureMatrix,
             for(j=0; j<numberOfCluster; j++){
                 di = vectorEuclideanDistance(featureMatrix->featureVector[i],
                                              dict->featureVector[j]);
-//                 if(di == 0){
-//                     for(k=0; k<dim; k++){
-//                         printf("%f ", featureMatrix->featureVector[i]->features[k]);
-//                     }
-//                     printf("\n");
-//                     for(k=0; k<dim; k++){
-//                         printf("%f ", dict->featureVector[j]->features[k]);
-//                     }
-//                     printf("\n");
-//                 }
                 if(di < d){
                     d = di;
                     labels[i] = j;

@@ -14,9 +14,9 @@ int main(int argc, char **argv) {
 
     vector<string> data_dirs;
     // Each directory will have different labels assigned
-    data_dirs.push_back("/home/valterf/git/libFL/data/object6");
-    data_dirs.push_back("/home/valterf/git/libFL/data/object7");
-    data_dirs.push_back("/home/valterf/git/libFL/data/object8");
+    data_dirs.push_back("/home/akira-miasato/git/libFL/data/object6");
+    data_dirs.push_back("/home/akira-miasato/git/libFL/data/object7");
+    data_dirs.push_back("/home/akira-miasato/git/libFL/data/object8");
 
     DirectoryManager* directoryManager;
     FeatureMatrix *featureMatrix = nullptr;

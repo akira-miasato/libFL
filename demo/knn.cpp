@@ -19,9 +19,9 @@ int main(int argc, char **argv) {
 
     vector<string> data_dirs;
     // Each directory will have different labels assigned
-    data_dirs.push_back("/home/valterf/git/libFL/data/object6dev");
-    data_dirs.push_back("/home/valterf/git/libFL/data/object7dev");
-    data_dirs.push_back("/home/valterf/git/libFL/data/object8dev");
+    data_dirs.push_back("/home/akira-miasato/git/libFL/data/object6dev");
+    data_dirs.push_back("/home/akira-miasato/git/libFL/data/object7dev");
+    data_dirs.push_back("/home/akira-miasato/git/libFL/data/object8dev");
 
     DirectoryManager* directoryManager;
     FeatureMatrix *featureMatrix = nullptr;
@@ -57,9 +57,9 @@ int main(int argc, char **argv) {
 
     start_time = omp_get_wtime();
     data_dirs.clear();
-    data_dirs.push_back("/home/valterf/git/libFL/data/object6");
-    data_dirs.push_back("/home/valterf/git/libFL/data/object7");
-    data_dirs.push_back("/home/valterf/git/libFL/data/object8");
+    data_dirs.push_back("/home/akira-miasato/git/libFL/data/object6");
+    data_dirs.push_back("/home/akira-miasato/git/libFL/data/object7");
+    data_dirs.push_back("/home/akira-miasato/git/libFL/data/object8");
 
     FeatureMatrix *featureMatrixDev = nullptr;
     std::vector<int> labelVectorDev;
@@ -91,7 +91,6 @@ int main(int argc, char **argv) {
     
     
     // KNN with raw histograms
-    featureMatrix->nFeaturesVectors = 1;
     start_time = omp_get_wtime();
     std::vector<int> pred = knn(
         featureMatrixDev,
@@ -110,15 +109,6 @@ int main(int argc, char **argv) {
     acc /= pred.size();
     time = omp_get_wtime() - start_time;
     printf("KNN acc:%f time:%f\n", acc, time);
-
-    // KMeansClustering
-    start_time = omp_get_wtime();
-    float loss;
-    FeatureMatrix *dict = kMeansClustering(featureMatrix, 1, &loss);
-    time = omp_get_wtime() - start_time;
-    printf("rows:%d cols:%d time:%f\n",
-           dict->nFeaturesVectors,
-           dict->featureVector[0]->size, time);
 
     return 0;
 }
