@@ -11,6 +11,10 @@
 #include "kNearestNeighbours.h"
 #include "bagOfVisualWords.h"
 
+FeatureVector* histogramExtractor(Image* img){
+    return computeHistogramForFeatureVector(img, 64, true);
+}
+
 int main(int argc, char **argv) {
     using namespace std;
     double start_time = omp_get_wtime();
@@ -32,7 +36,7 @@ int main(int argc, char **argv) {
     for(int i=0; i<data_dirs.size(); i++) {
         path = data_dirs[i];
         directoryManager = loadDirectory(path.c_str(), 1);
-        m1 = sampleHistograms(directoryManager, 128, 128, 1);
+        m1 = sampleFeatures(directoryManager, histogramExtractor, 128, 128, 1);
         for(int i=0; i<m1->nFeaturesVectors; i++) {
             labelVector.push_back(label);
         }
@@ -67,7 +71,7 @@ int main(int argc, char **argv) {
     for(int i=0; i<data_dirs.size(); i++) {
         path = data_dirs[i];
         directoryManager = loadDirectory(path.c_str(), 1);
-        m1 = sampleHistograms(directoryManager, 128, 128, 1);
+        m1 = sampleFeatures(directoryManager, histogramExtractor, 128, 128, 1);
         for(int i=0; i<m1->nFeaturesVectors; i++) {
             labelVectorDev.push_back(label);
         }
@@ -91,24 +95,26 @@ int main(int argc, char **argv) {
     
     
     // KNN with raw histograms
-    start_time = omp_get_wtime();
-    std::vector<int> pred = knn(
-        featureMatrixDev,
-        featureMatrix,
-        labelVector,
-        1,
-        vectorCosineDistance
-    );
+    for(int i=1; i<16; i++){
+        start_time = omp_get_wtime();
+        std::vector<int> pred = knn(
+            featureMatrixDev,
+            featureMatrix,
+            labelVector,
+            i,
+            vectorEuclideanDistance
+        );
 
-    double acc = 0;
-    for(int i=0; i<pred.size(); i++){
-        if(pred[i] == labelVectorDev[i]){
-            acc++;
+        double acc = 0;
+        for(int i=0; i<pred.size(); i++){
+            if(pred[i] == labelVectorDev[i]){
+                acc++;
+            }
         }
+        acc /= pred.size();
+        time = omp_get_wtime() - start_time;
+        printf("%iNN acc:%f time:%f\n", i, acc, time);
     }
-    acc /= pred.size();
-    time = omp_get_wtime() - start_time;
-    printf("KNN acc:%f time:%f\n", acc, time);
 
     return 0;
 }

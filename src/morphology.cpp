@@ -1,8 +1,8 @@
 //
 // Created by deangeli on 3/15/17.
 //
+#include <stdexcept>
 #include "morphology.h"
-
 
 GrayImage *dilate(GrayImage *image, AdjacencyRelation *AdjRel){
     GrayImage* dilatedImage = createGrayImage(image->ncols,image->nrows);
@@ -289,9 +289,6 @@ FeatureVector *applyGranulometryOnImage(ColorImage *image, int k){
     featureVector = (float*)calloc(k+1,sizeof(float));
     ColorImage* imageYcbcr = RGBtoYCbCr(image);
     GrayImage* grayImage = extractColorChannelAsGrayImage(imageYcbcr,0);
-//    char number[15];
-//    char number2[15];
-//    char filename[80];
 
     for (int i = 0; i <= k; ++i) {
         resizeLosangeAdjacency(&adjRel,i);
@@ -300,18 +297,6 @@ FeatureVector *applyGranulometryOnImage(ColorImage *image, int k){
         image2 = open(grayImage,adjRel);
         image3 = imageSubtraction(image1,image2,true);
         featureVector[i] = sumUpAllPixelsValues(image3);
-//        sprintf(number,"%d",i);
-//        sprintf(number2,"%d",i);
-//        memset(filename,0,sizeof(filename));
-//        strcat(filename,"open");
-//        strcat(filename,number);
-//        strcat(filename,".pgm");
-//        writeGrayImage(image1,strcat(number,"_1.pgm"));
-//        writeGrayImage(image2,strcat(number2,"_2.pgm"));
-//        memset(number,0,sizeof(number));
-//        memset(number2,0,sizeof(number2));
-
-//        writeGrayImage(image3,filename);
         destroyGrayImage(&image1);
         destroyGrayImage(&image2);
         destroyGrayImage(&image3);
@@ -320,6 +305,25 @@ FeatureVector *applyGranulometryOnImage(ColorImage *image, int k){
     FeatureVector* vec = createFeatureVector(featureVector,k+1);
     return vec;
 }
+
+FeatureVector *applyGranulometryOnImage(Image *image, int k){
+    FeatureVector* ret;
+    if(image->nchannels == 3){
+        ColorImage* img = convertImage2ColorImage(image);
+        ret = applyGranulometryOnImage(img, k);
+        destroyColorImage(&img);
+    }
+    else if(image->nchannels == 1){
+        GrayImage* img = convertImage2GrayImage(image);
+        ret = applyGranulometryOnImage(img, k);
+        destroyGrayImage(&img);
+    }
+    else{
+        throw std::runtime_error("Image is not grayscale nor RGB!");
+    }
+    return ret;
+}
+
 
 FeatureVector *getMorphologicalPdf(GrayImage *image, int k){
     AdjacencyRelation *adjRel = NULL;
@@ -370,6 +374,25 @@ FeatureVector *getMorphologicalPdf(ColorImage *image, int k){
     FeatureVector *vector = createFeatureVector(featureVector,k);
     return vector;
 }
+
+FeatureVector *getMorphologicalPdf(Image *image, int k){
+    FeatureVector* ret;
+    if(image->nchannels == 3){
+        ColorImage* img = convertImage2ColorImage(image);
+        ret = getMorphologicalPdf(img, k);
+        destroyColorImage(&img);
+    }
+    else if(image->nchannels == 1){
+        GrayImage* img = convertImage2GrayImage(image);
+        ret = getMorphologicalPdf(img, k);
+        destroyGrayImage(&img);
+    }
+    else{
+        throw std::runtime_error("Image is not grayscale nor RGB!");
+    }
+    return ret;
+}
+
 
 Image* transformAdjacencyRelation2Image(AdjacencyRelation *adjRel,int nx,int ny,int centerX,int centerY){
     Image* image = createImage(nx,ny,1);

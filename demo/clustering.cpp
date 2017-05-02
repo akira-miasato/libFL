@@ -3,8 +3,13 @@
 #include <vector>
 #include <string>
 
+#include "histogram.h"
 #include "featureVector.h"
 #include "bagOfVisualWords.h"
+
+FeatureVector* histogramExtractor(Image* img){
+    return computeHistogramForFeatureVector(img, 64, true);
+}
 
 int main(int argc, char **argv) {
     using namespace std;
@@ -27,7 +32,7 @@ int main(int argc, char **argv) {
     for(int i=0; i<data_dirs.size(); i++) {
         path = data_dirs[i];
         directoryManager = loadDirectory(path.c_str(), 1);
-        m1 = sampleHistograms(directoryManager, 128, 128, 1);
+        m1 = sampleFeatures(directoryManager, histogramExtractor, 128, 128, 1);
         for(int i=0; i<m1->nFeaturesVectors; i++) {
             labelVector.push_back(label);
         }

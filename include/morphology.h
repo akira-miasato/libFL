@@ -60,8 +60,10 @@ float *applyGranulometryOnImage(GrayImage *image, float startRadius, float endRa
  * */
 FeatureVector *applyGranulometryOnImage(GrayImage *image, int k);
 FeatureVector *applyGranulometryOnImage(ColorImage *image, int k);
+FeatureVector *applyGranulometryOnImage(Image *image, int k);
 FeatureVector *getMorphologicalPdf(GrayImage *image, int k);
 FeatureVector *getMorphologicalPdf(ColorImage *image, int k);
+FeatureVector *getMorphologicalPdf(Image *image, int k);
 
 
 FeatureVector *getMorphologicalPdf(Image *image, AdjacencyRelation* adjacencyRelation, int k_times);

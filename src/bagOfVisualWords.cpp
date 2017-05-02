@@ -39,10 +39,11 @@ FeatureMatrix* computeHistogramPatches(DirectoryManager* directoryManager, int p
 }
 
 
-FeatureMatrix* sampleHistograms(DirectoryManager* directoryManager,
-                                int patch_x, int patch_y,
-                                double sampling_factor,
-                                int binSize, int seed){
+FeatureMatrix* sampleFeatures(DirectoryManager* directoryManager,
+                              FeatureExtractorFn featureExtractor,
+                              int patch_x, int patch_y,
+                              double sampling_factor,
+                              int seed){
     srand(seed);
     Image* firstImage = readImage(directoryManager->files[0]->path);
     int patchX_axis = firstImage->nx - patch_x + 1;
@@ -67,7 +68,7 @@ FeatureMatrix* sampleHistograms(DirectoryManager* directoryManager,
                 if(r < sampling_factor){
                     patch = extractSubImage(currentImage, x, y,
                                             patch_x, patch_y, true);
-                    featureMatrix->featureVector[k] = computeHistogramForFeatureVector(patch, binSize, true);
+                    featureMatrix->featureVector[k] = featureExtractor(patch);
                     k++;
                     destroyImage(&patch);
                 }
@@ -82,11 +83,13 @@ FeatureMatrix* sampleHistograms(DirectoryManager* directoryManager,
 }
 
 
-FeatureMatrix* sampleHistogramBoW(DirectoryManager* directoryManager,
-                         FeatureMatrix* dictionary,
-                         int patch_x, int patch_y,
-                         double sampling_factor,
-                         int binSize, int seed){
+FeatureMatrix* sampleFeatureSoftBoW(DirectoryManager* directoryManager,
+                                    FeatureMatrix* dictionary,
+                                    FeatureExtractorFn featureExtractor,
+                                    int patch_x, int patch_y,
+                                    double sampling_factor,
+                                    int seed){
+
     srand(seed);
 
     FeatureMatrix* featureMatrix = createFeatureMatrix(directoryManager->nfiles);
@@ -111,7 +114,7 @@ FeatureMatrix* sampleHistogramBoW(DirectoryManager* directoryManager,
                                             patch_x, patch_y, true);
                     if(patch_hist) destroyFeatureVector(&patch_hist);
                     if(patch_vbow) destroyFeatureVector(&patch_vbow);
-                    patch_hist = computeHistogramForFeatureVector(patch, binSize, true);
+                    patch_hist = featureExtractor(patch);
                     patch_vbow = computeSoftVBoW(patch_hist, dictionary);
                     for(int col=0; col<dim; col++){
                         featureMatrix->featureVector[fileIndex]->features[col] +=
@@ -130,6 +133,59 @@ FeatureMatrix* sampleHistogramBoW(DirectoryManager* directoryManager,
 
     return featureMatrix;
 }
+
+
+FeatureMatrix* sampleFeatureHardBoW(DirectoryManager* directoryManager,
+                                    FeatureMatrix* dictionary,
+                                    FeatureExtractorFn featureExtractor,
+                                    int patch_x, int patch_y, float th,
+                                    double sampling_factor,
+                                    int seed){
+
+    srand(seed);
+
+    FeatureMatrix* featureMatrix = createFeatureMatrix(directoryManager->nfiles);
+
+    int k;
+    int dim = dictionary->nFeaturesVectors;
+    double r;
+    Image* patch;
+    FeatureVector* patch_hist = NULL;
+    FeatureVector* patch_vbow = NULL;
+
+// #pragma omp parallel for
+    for (size_t fileIndex = 0; fileIndex < directoryManager->nfiles; ++fileIndex) {
+        Image* currentImage = readImage(directoryManager->files[fileIndex]->path);
+        featureMatrix->featureVector[fileIndex] = createFeatureVector(dim);
+        k = 0;
+        for (int y = 0; y <= currentImage->ny - patch_y; ++y) {
+            for (int x = 0; x <= currentImage->nx - patch_x; ++x) {
+                r = (double)rand() / RAND_MAX; 
+                if(r < sampling_factor){
+                    patch = extractSubImage(currentImage, x, y,
+                                            patch_x, patch_y, true);
+                    if(patch_hist) destroyFeatureVector(&patch_hist);
+                    if(patch_vbow) destroyFeatureVector(&patch_vbow);
+                    patch_hist = featureExtractor(patch);
+                    patch_vbow = computeHardVBoW(patch_hist, dictionary, th);
+                    for(int col=0; col<dim; col++){
+                        featureMatrix->featureVector[fileIndex]->features[col] +=
+                            patch_vbow->features[col];
+                    }
+                    k++;
+                    destroyImage(&patch);
+                }
+            }
+        }
+        for(int col=0; col<dim; col++){
+            featureMatrix->featureVector[fileIndex]->features[col] /= k;
+        }
+        destroyImage(&currentImage);
+    }
+
+    return featureMatrix;
+}
+
 
 
 
@@ -260,7 +316,7 @@ FeatureVector* computeHardVBoW(FeatureVector* fv, FeatureMatrix* dict, float th)
     FeatureVector* vbow = createFeatureVector(dict->nFeaturesVectors);
     float diff;
     for(int i=0; i<dict->nFeaturesVectors; i++){
-        diff = vectorManhattanDistance(fv, dict->featureVector[i]);
+        diff = vectorCosineDistance(fv, dict->featureVector[i]);
         if(diff < th){
             vbow->features[i] = 1;
         }
