@@ -31,6 +31,21 @@ bool comp_tuple(std::pair<float, int> i,
     return(i.first < j.first);
 }
 
+
+int nearest(FeatureVector* ref, FeatureMatrix* hyps, VectorDistFn distFn){
+    float d, di;
+    std::vector<std::pair<float, int> > dist_pos(hyps->nFeaturesVectors);
+    d = std::numeric_limits<float>::max();
+    for(int j=0; j<hyps->nFeaturesVectors; j++){
+        di = distFn(hyps->featureVector[j], ref);
+        dist_pos[j].first = di;
+        dist_pos[j].second = j;
+    }
+    std::sort(dist_pos.begin(), dist_pos.end(), comp_tuple);
+    return dist_pos[0].second;
+}
+
+
 std::vector<int> knn(FeatureMatrix* target, FeatureMatrix* trainX,
                      std::vector<int> trainY,
                      int k,
@@ -41,7 +56,6 @@ std::vector<int> knn(FeatureMatrix* target, FeatureMatrix* trainX,
     }
     std::vector<int> ret(target->nFeaturesVectors);
     std::vector<std::pair<float, int> > dist_pos(trainX->nFeaturesVectors);
-    int label;
     float d, di;
     for(int i=0; i<target->nFeaturesVectors; i++){
         d = std::numeric_limits<float>::max();

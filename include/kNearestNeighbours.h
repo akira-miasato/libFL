@@ -12,10 +12,12 @@
 
 typedef  float (*VectorDistFn)(FeatureVector* a, FeatureVector* b);
 
+int nearest(FeatureVector* ref, FeatureMatrix* hyps,
+            VectorDistFn distFn=vectorEuclideanDistance);
+
 std::vector<int> knn(FeatureMatrix* target, FeatureMatrix* trainX,
                      std::vector<int> trainY,
                      int k,
-                     VectorDistFn distFn=vectorManhattanDistance
-                    );
+                     VectorDistFn distFn=vectorEuclideanDistance);
 
 #endif //_KNEARESTNEIGHBOURS_H_

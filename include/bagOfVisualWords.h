@@ -25,14 +25,24 @@ typedef struct _bagOfVisualWords {
 
 typedef FeatureVector* (*FeatureExtractorFn)(Image* img);
 
-FeatureMatrix* computeFeatureVectors(Image* imagePack, int patchSize);
+FeatureMatrix* computeHistogramPatches(DirectoryManager* directoryManager, int patchSize);
 
+FeatureMatrix* computeFeatureVectors(Image* imagePack, int patchSize);
 
 FeatureMatrix* sampleFeatures(DirectoryManager* directoryManager,
                               FeatureExtractorFn featureExtractor,
                               int patch_x, int patch_y,
                               double sampling_factor,
                               int seed=0);
+
+FeatureMatrix* patchHistSoftBow(DirectoryManager* directoryManager,
+                                FeatureMatrix* dictionary,
+                                int patchSize);
+
+FeatureMatrix* patchHistBow(DirectoryManager* directoryManager,
+                            FeatureMatrix* dictionary,
+                            int patchSize);
+
 FeatureMatrix* sampleFeatureSoftBoW(DirectoryManager* directoryManager,
                                     FeatureMatrix* dictionary,
                                     FeatureExtractorFn featureExtractor,
@@ -40,13 +50,12 @@ FeatureMatrix* sampleFeatureSoftBoW(DirectoryManager* directoryManager,
                                     double sampling_factor,
                                     int seed=0);
 
-FeatureMatrix* sampleFeatureHardBoW(DirectoryManager* directoryManager,
-                                    FeatureMatrix* dictionary,
-                                    FeatureExtractorFn featureExtractor,
-                                    int patch_x, int patch_y, float th,
-                                    double sampling_factor,
-                                    int seed=0);
-
+FeatureMatrix* sampleFeatureBoW(DirectoryManager* directoryManager,
+                                FeatureMatrix* dictionary,
+                                FeatureExtractorFn featureExtractor,
+                                int patch_x, int patch_y,
+                                double sampling_factor,
+                                int seed=0);
 
 FeatureMatrix* kMeansClustering(FeatureMatrix* featureMatrix,
                                 int numberOfCluster,

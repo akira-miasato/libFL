@@ -19,13 +19,20 @@ int main(int argc, char **argv) {
     using namespace std;
     double start_time = omp_get_wtime();
 
-    int patchSize = 64;
+    int patchSize = 128;
 
-    vector<string> data_dirs;
-    // Each directory will have different labels assigned
-    data_dirs.push_back("/home/akira-miasato/git/libFL/data/object6dev");
-    data_dirs.push_back("/home/akira-miasato/git/libFL/data/object7dev");
-    data_dirs.push_back("/home/akira-miasato/git/libFL/data/object8dev");
+    string root("/home/akira-miasato/data/img/coil-100/");
+    vector<string> train_dirs;
+    for(int i=1; i<=100; i++){
+        train_dirs.push_back(root + "obj" + to_string(i));
+    }
+
+    FeatureMatrix *featureMatrixDev = nullptr;
+    vector<int> labelVectorDev;
+    vector<string> dev_dirs;
+    for(string train_dir : train_dirs){
+        dev_dirs.push_back(train_dir + "dev");
+    }
 
     DirectoryManager* directoryManager;
     FeatureMatrix *featureMatrix = nullptr;
@@ -33,8 +40,8 @@ int main(int argc, char **argv) {
     string path;
     std::vector<int> labelVector;
     int label = 0;
-    for(int i=0; i<data_dirs.size(); i++) {
-        path = data_dirs[i];
+    for(int i=0; i<train_dirs.size(); i++) {
+        path = train_dirs[i];
         directoryManager = loadDirectory(path.c_str(), 1);
         m1 = sampleFeatures(directoryManager, histogramExtractor, 128, 128, 1);
         for(int i=0; i<m1->nFeaturesVectors; i++) {
@@ -60,16 +67,10 @@ int main(int argc, char **argv) {
     
 
     start_time = omp_get_wtime();
-    data_dirs.clear();
-    data_dirs.push_back("/home/akira-miasato/git/libFL/data/object6");
-    data_dirs.push_back("/home/akira-miasato/git/libFL/data/object7");
-    data_dirs.push_back("/home/akira-miasato/git/libFL/data/object8");
 
-    FeatureMatrix *featureMatrixDev = nullptr;
-    std::vector<int> labelVectorDev;
     label = 0;
-    for(int i=0; i<data_dirs.size(); i++) {
-        path = data_dirs[i];
+    for(int i=0; i<dev_dirs.size(); i++) {
+        path = dev_dirs[i];
         directoryManager = loadDirectory(path.c_str(), 1);
         m1 = sampleFeatures(directoryManager, histogramExtractor, 128, 128, 1);
         for(int i=0; i<m1->nFeaturesVectors; i++) {

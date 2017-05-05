@@ -4,6 +4,7 @@
 #include <random>
 #include <stdexcept>
 #include <limits>
+#include "kNearestNeighbours.h"
 #include "featureVector.h"
 #include "bagOfVisualWords.h"
 
@@ -83,6 +84,113 @@ FeatureMatrix* sampleFeatures(DirectoryManager* directoryManager,
 }
 
 
+FeatureMatrix* patchHistSoftBow(DirectoryManager* directoryManager,
+                                FeatureMatrix* dictionary,
+                                int patchSize){
+
+    int binSize = 64;
+    Image* firstImage = readImage(directoryManager->files[0]->path);
+    int patchX_axis = firstImage->nx/patchSize;
+    int patchY_axis = firstImage->ny/patchSize;
+    int numberPatchsPerImage = patchX_axis*patchY_axis;
+    int numberPatchs = numberPatchsPerImage*directoryManager->nfiles;
+    //FeatureMatrix* featureMatrix = createFeatureMatrix();
+    destroyImage(&firstImage);
+    
+    int k;
+    int dim = dictionary->nFeaturesVectors;
+    double r;
+    Image* patch;
+    FeatureVector* patch_hist = NULL;
+    FeatureVector* patch_vbow = NULL;
+    int word_index;
+    
+    FeatureMatrix* featureMatrix = createFeatureMatrix(directoryManager->nfiles);
+
+// #pragma omp parallel for
+    for (size_t fileIndex = 0; fileIndex < directoryManager->nfiles; ++fileIndex) {
+        Image* currentImage = readImage(directoryManager->files[fileIndex]->path);
+        featureMatrix->featureVector[fileIndex] = createFeatureVector(dim);
+        for(int col=0; col<dim; col++){
+            featureMatrix->featureVector[fileIndex]->features[col] = 0;
+        }
+        k = 0;
+        for (int y = 0; y <= currentImage->ny-patchSize; y +=patchSize) {
+            for (int x = 0; x <= currentImage->nx-patchSize; x += patchSize) {
+                patch = extractSubImage(currentImage,x,y,patchSize,patchSize,true);
+                if(patch_hist) destroyFeatureVector(&patch_hist);
+                if(patch_vbow) destroyFeatureVector(&patch_vbow);
+                patch_hist = computeHistogramForFeatureVector(patch,binSize,true);
+                patch_vbow = computeSoftVBoW(patch_hist, dictionary);
+                for(int col=0; col<dim; col++){
+                    featureMatrix->featureVector[fileIndex]->features[col] +=
+                        patch_vbow->features[col];
+                }
+                k++;
+                destroyImage(&patch);
+            }
+        }
+        for(int col=0; col<dim; col++){
+            featureMatrix->featureVector[fileIndex]->features[col] /= k;
+        }
+        destroyImage(&currentImage);
+    }
+    return featureMatrix;
+}
+
+
+
+
+FeatureMatrix* patchHistBow(DirectoryManager* directoryManager,
+                            FeatureMatrix* dictionary,
+                            int patchSize){
+
+    int binSize = 64;
+    Image* firstImage = readImage(directoryManager->files[0]->path);
+    int patchX_axis = firstImage->nx/patchSize;
+    int patchY_axis = firstImage->ny/patchSize;
+    int numberPatchsPerImage = patchX_axis*patchY_axis;
+    int numberPatchs = numberPatchsPerImage*directoryManager->nfiles;
+    //FeatureMatrix* featureMatrix = createFeatureMatrix();
+    destroyImage(&firstImage);
+    
+    int k;
+    int dim = dictionary->nFeaturesVectors;
+    double r;
+    Image* patch;
+    FeatureVector* patch_hist = NULL;
+    int word_index;
+    
+    FeatureMatrix* featureMatrix = createFeatureMatrix(directoryManager->nfiles);
+
+// #pragma omp parallel for
+    for (size_t fileIndex = 0; fileIndex < directoryManager->nfiles; ++fileIndex) {
+        Image* currentImage = readImage(directoryManager->files[fileIndex]->path);
+        featureMatrix->featureVector[fileIndex] = createFeatureVector(dim);
+        for(int col=0; col<dim; col++){
+            featureMatrix->featureVector[fileIndex]->features[col] = 0;
+        }
+        k = 0;
+        for (int y = 0; y <= currentImage->ny-patchSize; y +=patchSize) {
+            for (int x = 0; x <= currentImage->nx-patchSize; x += patchSize) {
+                patch = extractSubImage(currentImage,x,y,patchSize,patchSize,true);
+                if(patch_hist) destroyFeatureVector(&patch_hist);
+                patch_hist = computeHistogramForFeatureVector(patch,binSize,true);
+                word_index = nearest(patch_hist, dictionary);
+                featureMatrix->featureVector[fileIndex]->features[word_index]+=1;
+                k++;
+                destroyImage(&patch);
+            }
+        }
+        for(int col=0; col<dim; col++){
+            featureMatrix->featureVector[fileIndex]->features[col] /= k;
+        }
+        destroyImage(&currentImage);
+    }
+    return featureMatrix;
+}
+
+
 FeatureMatrix* sampleFeatureSoftBoW(DirectoryManager* directoryManager,
                                     FeatureMatrix* dictionary,
                                     FeatureExtractorFn featureExtractor,
@@ -135,12 +243,12 @@ FeatureMatrix* sampleFeatureSoftBoW(DirectoryManager* directoryManager,
 }
 
 
-FeatureMatrix* sampleFeatureHardBoW(DirectoryManager* directoryManager,
-                                    FeatureMatrix* dictionary,
-                                    FeatureExtractorFn featureExtractor,
-                                    int patch_x, int patch_y, float th,
-                                    double sampling_factor,
-                                    int seed){
+FeatureMatrix* sampleFeatureBoW(DirectoryManager* directoryManager,
+                                FeatureMatrix* dictionary,
+                                FeatureExtractorFn featureExtractor,
+                                int patch_x, int patch_y,
+                                double sampling_factor,
+                                int seed){
 
     srand(seed);
 
@@ -151,12 +259,15 @@ FeatureMatrix* sampleFeatureHardBoW(DirectoryManager* directoryManager,
     double r;
     Image* patch;
     FeatureVector* patch_hist = NULL;
-    FeatureVector* patch_vbow = NULL;
+    int word_index;
 
 // #pragma omp parallel for
     for (size_t fileIndex = 0; fileIndex < directoryManager->nfiles; ++fileIndex) {
         Image* currentImage = readImage(directoryManager->files[fileIndex]->path);
         featureMatrix->featureVector[fileIndex] = createFeatureVector(dim);
+        for(int col=0; col<dim; col++){
+            featureMatrix->featureVector[fileIndex]->features[col] = 0;
+        }
         k = 0;
         for (int y = 0; y <= currentImage->ny - patch_y; ++y) {
             for (int x = 0; x <= currentImage->nx - patch_x; ++x) {
@@ -165,13 +276,9 @@ FeatureMatrix* sampleFeatureHardBoW(DirectoryManager* directoryManager,
                     patch = extractSubImage(currentImage, x, y,
                                             patch_x, patch_y, true);
                     if(patch_hist) destroyFeatureVector(&patch_hist);
-                    if(patch_vbow) destroyFeatureVector(&patch_vbow);
                     patch_hist = featureExtractor(patch);
-                    patch_vbow = computeHardVBoW(patch_hist, dictionary, th);
-                    for(int col=0; col<dim; col++){
-                        featureMatrix->featureVector[fileIndex]->features[col] +=
-                            patch_vbow->features[col];
-                    }
+                    word_index = nearest(patch_hist, dictionary);
+                    featureMatrix->featureVector[fileIndex]->features[word_index]+=1;
                     k++;
                     destroyImage(&patch);
                 }
@@ -185,8 +292,6 @@ FeatureMatrix* sampleFeatureHardBoW(DirectoryManager* directoryManager,
 
     return featureMatrix;
 }
-
-
 
 
 FeatureMatrix* computeFeatureVectors(Image* imagePack, int patchSize){
@@ -300,7 +405,7 @@ FeatureVector* computeSoftVBoW(FeatureVector* fv, FeatureMatrix* dict){
     }
     FeatureVector* vbow = createFeatureVector(dict->nFeaturesVectors);
     for(int i=0; i<dict->nFeaturesVectors; i++){
-        vbow->features[i] = 1 - vectorCosineDistance(fv, dict->featureVector[i]);
+        vbow->features[i] = vectorManhattanDistance(fv, dict->featureVector[i]);
     }
     return vbow;
 }
