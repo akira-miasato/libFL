@@ -1,12 +1,11 @@
 #libFL CMAKE
 
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 2.8.12)
 
 project(libFL)
 
 set(CMAKE_VERBOSE_MAKEFILE "ON")
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
-
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
@@ -31,24 +30,33 @@ option (USE_LAPACKE "Use BLAS C interface to BLAS" ON)
 option (USE_OPENMP "Use OpenMP for multithreading" ON)
  
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
- 
+
 include_directories(include src .)
+
 message(Compiler: "${CMAKE_CXX_COMPILER_ID}")
 
 message(Compiler: "${CMAKE_C_COMPILER_ID}")
  
-aux_source_directory(${libFL_SOURCE_DIR}/src LIBFL_SRC)
+aux_source_directory(${CMAKE_SOURCE_DIR}/src LIBFL_SRC)
  
-file(GLOB LIBFL_INCLUDE
-    ${libfl_SOURCE_DIR}/include/*.h)
- 
+file(GLOB LIBFL_INCLUDE ${CMAKE_SOURCE_DIR}/include/*.h)
 
 message(STATUS "LIBFL library")
 foreach( libflsourcefile ${LIBFL_SRC} )
     message(STATUS "\t${libflsourcefile}")
 endforeach(libflsourcefile ${LIBFL_SRC})
- 
+
+file(GLOB EXTERNAL_INCLUDE_DIRS "${CMAKE_SOURCE_DIR}/externals/*/include")
+file(GLOB EXTERNAL_LIBRARIES "${CMAKE_SOURCE_DIR}/externals/*/lib/*.a")
+    
 add_library(libfl STATIC ${LIBFL_SRC} ${LIBFL_INCLUDE})
+
+target_include_directories(libfl PUBLIC ${EXTERNAL_INCLUDE_DIRS})
+target_link_libraries(libfl
+                      ${CMAKE_SOURCE_DIR}/externals/libjpeg/lib/libjpeg.a
+                      ${CMAKE_SOURCE_DIR}/externals/libpng/lib/libpng.a
+                      ${CMAKE_SOURCE_DIR}/externals/libsvm/lib/libsvm.a
+                      ${CMAKE_SOURCE_DIR}/externals/zlib/lib/zlib.a)
 
 file(GLOB LIBFL_DEMO
 
@@ -58,7 +66,7 @@ file(GLOB LIBFL_DEMO
 install(FILES ${LIBFL_INCLUDE}
         DESTINATION include
         )
- 
+
 message(STATUS "Demo files")
 foreach( demosourcefile ${LIBFL_DEMO} )
     get_filename_component(demofilename ${demosourcefile} NAME)

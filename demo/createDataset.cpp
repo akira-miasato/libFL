@@ -49,17 +49,17 @@ int main(){
 		// free(featureMatrix->featureVector[k]->features);
 		// featureMatrix->featureVector[k]->features = aux;
 		// featureMatrix->featureVector[k]->size += 1;
-		int currentIndex = countClass[label];
-		sprintf(number,"%lu",currentIndex);
-		sprintf(number2,"%lu",label);
-        memset(filename,0,sizeof(filename));
-        strcat(filename,number);
-        strcat(filename,"_");
-        strcat(filename,number2);
-        strcat(filename,".png");
-        memset(number,0,sizeof(number));
-        memset(number2,0,sizeof(number2));
-		writeImage(image,filename);
+// 		int currentIndex = countClass[label];
+// 		sprintf(number,"%lu",currentIndex);
+// 		sprintf(number2,"%lu",label);
+//         memset(filename,0,sizeof(filename));
+//         strcat(filename,number);
+//         strcat(filename,"_");
+//         strcat(filename,number2);
+//         strcat(filename,".png");
+//         memset(number,0,sizeof(number));
+//         memset(number2,0,sizeof(number2));
+// 		writeImage(image,filename);
 		//k++;
 		//break;
 		//progress = ((float)i)/directoryManager->nfiles;
@@ -67,7 +67,7 @@ int main(){
 		// 	//printf("%f %%\n", progress*100);
 		// 	printf("%d \n",k);
 		// }
-		destroyImage(&image);
+// 		destroyImage(&image);
 		// destroyImage(&imageYcbcr);
 		// destroyImage(&imageY);
 		//free((char*)strC);

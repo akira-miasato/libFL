@@ -17,7 +17,7 @@ FLAGS=  -O3 -Wall -Wno-unused-result -pedantic -Wno-write-strings  -fsanitize=ad
 FLAGSIM =   $(FLAGS)
 #-std=gnu99
 
-libFL:  lpng ljpeg libsvm $(LIB)/libFL.a
+libFL:  lpng ljpeg lsvm $(LIB)/libFL.a
 	echo "libFL.a built..."
 
 
@@ -62,7 +62,7 @@ ljpeg: ./externals/libjpeg/source ./externals/libjpeg/include
 libtiff:
 	cd externals/libtiff; (MAKE) ; cd -\
 
-libsvm:
+lsvm: ./externals/libsvm/source ./externals/libsvm/include
 	cd externals/libsvm; $(MAKE) ; cd -\
 
 clean:
