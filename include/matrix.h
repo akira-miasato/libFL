@@ -18,10 +18,11 @@ typedef struct _matrix{
 Matrix* createMatrix(size_t nrows, size_t ncols, size_t dataSize_bytes);
 Matrix* createMatrix(size_t nrows, size_t ncols); //default double
 Matrix* createMatrix(GVector* vector);
-Matrix* stackVerticallyMatrices(Matrix* matrix1,Matrix* matrix2);
+Matrix* stackVerticallyMatrices(Matrix* matrix1, Matrix* matrix2);
 Matrix* stackVerticallyMatrices(Matrix* matrix1, GVector* vector);
 void reshapeMatrix(Matrix* matrix, size_t nrows, size_t ncols);
-void stackVerticallyMatrices(Matrix** matrix1,Matrix* matrix2);
+void stackVerticallyMatricesInPlace(Matrix** matrix1, Matrix* matrix2);
+Matrix* stackVerticallyMatrices(Matrix* matrix1, Matrix* matrix2);
 void destroyMatrix(Matrix **pMatrix);
 Matrix* copyMatrix(Matrix* matrix);
 

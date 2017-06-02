@@ -14,7 +14,7 @@ void destroyImage(void *image){
 
 
 int main(int argc, char const *argv[]) {
-
+/*
     //generating numbers
     LinkedList *list = createLinkedList(sizeof(int),true,NULL);
     for(int i = 1; i <= 10; i++) {
@@ -105,7 +105,7 @@ int main(int argc, char const *argv[]) {
 
     destroyLinkedList(&list);
     destroyLinkedList(&list_image);
-
+*/
 
     return 0;
 }

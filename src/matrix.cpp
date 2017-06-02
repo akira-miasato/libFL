@@ -54,7 +54,7 @@ void reshapeMatrix(Matrix* matrix, size_t nrows, size_t ncols){
 
 
 //TODO: there is a bug here
-void stackVerticallyMatricesInPlace(Matrix** matrix1,Matrix* matrix2){
+void stackVerticallyMatricesInPlace(Matrix** matrix1, Matrix* matrix2){
     Matrix* aux = *matrix1;
     if(aux == NULL && matrix2 == NULL){
         return;

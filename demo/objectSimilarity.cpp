@@ -31,7 +31,7 @@ int main(int argc, char **argv) {
     /*
      * escreve uma arquivo txt onde caada linha no arquivo e um feature vector
      * */
-    wirteFeatureVectors(featureMatrix,3, "featureVectors.txt");
+    writeFeatureVectors(featureMatrix,3, "featureVectors.txt");
 
     /*
      * computa a correlacao cruzada para entre os features vector da imagem0 e imagem1, e entre os
@@ -67,7 +67,7 @@ int main(int argc, char **argv) {
     FeatureVector **correlations = (FeatureVector **)calloc(3,sizeof(FeatureVector *));
     correlations[0] = vec1;
     correlations[1] = vec2;
-    wirteFeatureVectors(correlations,2, "R_xy.txt");
+    writeFeatureVectors(correlations,2, "R_xy.txt");
 
     destroyFeatureVector(&vec1);
     destroyFeatureVector(&vec2);

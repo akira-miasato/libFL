@@ -43,7 +43,7 @@ int main(int argc, char **argv) {
     }
     printf("\n");
 
-    stackVerticallyMatrices(&matrix1,matrix2);
+    stackVerticallyMatricesInPlace(&matrix1, matrix2);
 
     for (size_t i = 0; i < matrix1->numberRows ; ++i) {
         for (size_t j = 0; j < matrix1->numberColumns; ++j) {

@@ -2,7 +2,7 @@
 
 cmake_minimum_required(VERSION 2.8.12)
 
-project(libFL)
+project(libFL C CXX)
 
 set(CMAKE_VERBOSE_MAKEFILE "ON")
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
@@ -36,9 +36,10 @@ include_directories(include src .)
 message(Compiler: "${CMAKE_CXX_COMPILER_ID}")
 
 message(Compiler: "${CMAKE_C_COMPILER_ID}")
+
+message(Source dir: "${CMAKE_SOURCE_DIR}")
  
-aux_source_directory(${CMAKE_SOURCE_DIR}/src LIBFL_SRC)
- 
+file(GLOB LIBFL_SRC ${CMAKE_SOURCE_DIR}/src/*.cpp)
 file(GLOB LIBFL_INCLUDE ${CMAKE_SOURCE_DIR}/include/*.h)
 
 message(STATUS "LIBFL library")
@@ -59,8 +60,7 @@ target_link_libraries(libfl
                       ${CMAKE_SOURCE_DIR}/externals/zlib/lib/zlib.a)
 
 file(GLOB LIBFL_DEMO
-
-    demo/*.cpp
+    ${CMAKE_SOURCE_DIR}/demo/*.cpp
     )
 
 install(FILES ${LIBFL_INCLUDE}
