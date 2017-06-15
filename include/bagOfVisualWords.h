@@ -57,10 +57,15 @@ FeatureMatrix* sampleFeatureBoW(DirectoryManager* directoryManager,
                                 double sampling_factor,
                                 int seed=0);
 
+
+/* KMeans clustering with fixed number of iterations and batch options.
+ * If batch_size=0, this turns into a regular KMeans */
 FeatureMatrix* kMeansClustering(FeatureMatrix* featureMatrix,
                                 int numberOfCluster,
                                 float* loss,
-                                int numIter=20);
+                                int numIter=20,
+                                int batch_size=200
+                               );
 
 FeatureVector* computeSoftVBoW(FeatureVector* fv, FeatureMatrix* dict);
 FeatureVector* computeHardVBoW(FeatureVector* fv, FeatureMatrix* dict, float th);

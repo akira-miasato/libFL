@@ -25,7 +25,7 @@ int main(int argc, char **argv) {
     FeatureMatrix *m1, *m2;
     string path;
     int label;
-    int num_clusters = 10;
+    int num_clusters = 1000;
     double start_time, time;
     int knn_n = 10;
     int patchX, patchY;
@@ -74,8 +74,7 @@ int main(int argc, char **argv) {
         for(int i=0; i<train_dirs.size(); i++) {
             path = train_dirs[i];
             directoryManager = loadDirectory(path.c_str(), 1);
-            m1 = computeHistogramPatches(directoryManager, patchX);
-//             m1 = sampleFeatures(directoryManager, featFn, patchX, patchY, kmeans_sampling);
+            m1 = sampleFeatures(directoryManager, featFn, patchX, patchY, kmeans_sampling);
             if(featureMatrix) {
                 m2 = featureMatrix;
                 featureMatrix = concatFeatureMatrices(m2, m1); // Preserve order
@@ -103,8 +102,7 @@ int main(int argc, char **argv) {
         for(int i=0; i<train_dirs.size(); i++) {
             path = train_dirs[i];
             directoryManager = loadDirectory(path.c_str(), 1);
-            m1 = patchHistSoftBow(directoryManager, dict, patchX);
-//             m1 = sampleFeatureSoftBoW(directoryManager, dict, featFn, patchX, patchY, predict_sampling);
+            m1 = sampleFeatureBoW(directoryManager, dict, featFn, patchX, patchY, predict_sampling);
             for(int i=0; i<m1->nFeaturesVectors; i++) {
                 labelVector.push_back(label);
             }
@@ -125,8 +123,7 @@ int main(int argc, char **argv) {
         for(int i=0; i<dev_dirs.size(); i++) {
             path = dev_dirs[i];
             directoryManager = loadDirectory(path.c_str(), 1);
-            m1 = patchHistSoftBow(directoryManager, dict, patchX);
-//             m1 = sampleFeatureSoftBoW(directoryManager, dict, featFn, patchX, patchY, predict_sampling);
+            m1 = sampleFeatureBoW(directoryManager, dict, featFn, patchX, patchY, predict_sampling);
             for(int i=0; i<m1->nFeaturesVectors; i++) {
                 labelVectorDev.push_back(label);
             }
@@ -166,8 +163,8 @@ int main(int argc, char **argv) {
                time,
                kmeans_sampling
               );
-        kmeans_sampling *= 2;
-        predict_sampling *= 2;
+//         kmeans_sampling *= 2;
+//         predict_sampling *= 2;
     }
 
 

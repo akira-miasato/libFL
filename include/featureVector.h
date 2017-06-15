@@ -32,8 +32,8 @@ FeatureVector* createRandomNormalizedFeatureVector(int size);
 /*
  * escreve uma arquivo txt onde caada linha no arquivo e um feature vector
  * */
-void wirteFeatureVector(FeatureVector* vector, FILE *fp);
-void wirteFeatureVectors(FeatureVector** vectors, int nVectors, char *filename);
+void writeFeatureVector(FeatureVector* vector, FILE *fp);
+void writeFeatureVectors(FeatureVector** vectors, int nVectors, char *filename);
 void destroyFeatureVector(FeatureVector** vector);
 void printFeatureVector(FeatureVector* featureVector);
 FeatureVector* mergeFeatureVectors(FeatureVector* vector1,FeatureVector* vector2);

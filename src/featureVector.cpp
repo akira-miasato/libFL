@@ -68,7 +68,7 @@ FeatureVector* createFeatureVector(float* vec,int size){
 }
 
 
-void wirteFeatureVectors(FeatureVector** vectors, int nVectors, char *filename){
+void writeFeatureVectors(FeatureVector** vectors, int nVectors, char *filename){
     FILE *fp = fopen(filename,"w");
     for (int i = 0; i < nVectors; ++i) {
         FeatureVector* vec = vectors[i];

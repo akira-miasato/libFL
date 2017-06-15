@@ -1,6 +1,7 @@
 //
 // Created by deangeli on 4/7/17.
 //
+#include <iostream>
 #include <random>
 #include <stdexcept>
 #include <limits>
@@ -325,19 +326,24 @@ FeatureMatrix* computeFeatureVectors(Image* imagePack, int patchSize){
     return featureMatrix;
 }
 
+
+
 FeatureMatrix* kMeansClustering(FeatureMatrix* featureMatrix,
                                 int numberOfCluster,
                                 float* loss,
-                                int numIter){
+                                int numIter,
+                                int batch_size
+                               ){
     FeatureMatrix* dict = createFeatureMatrix(numberOfCluster);
     int i=0, j=0, k=0;
+    int num_points = featureMatrix->nFeaturesVectors;
     int randomIndex;
     int dim = featureMatrix->featureVector[0]->size;
-    bool *isUsed = (bool*)calloc(featureMatrix->nFeaturesVectors,sizeof(*isUsed));
-    int* labels = (int*)calloc(featureMatrix->nFeaturesVectors,sizeof(*labels));
+    bool *isUsed = (bool*)calloc(num_points,sizeof(*isUsed));
+    int* labels = (int*)calloc(num_points,sizeof(*labels));
     int* counts = (int*)calloc(numberOfCluster, sizeof(*counts));
     while (k < numberOfCluster) {
-        randomIndex = RandomInteger(0, featureMatrix->nFeaturesVectors-1);
+        randomIndex = RandomInteger(0, num_points-1);
         if(isUsed[randomIndex] == false){
             dict->featureVector[k] = copyFeatureVector(featureMatrix->featureVector[randomIndex]);
             isUsed[randomIndex] = true;
@@ -347,13 +353,50 @@ FeatureMatrix* kMeansClustering(FeatureMatrix* featureMatrix,
     free(isUsed);
     
     float d, di;
+    double r;
+    
+    // BEGIN Mini-batch variables
+    if(batch_size == 0 || batch_size > num_points){
+        batch_size = num_points;
+    }
+    int b[batch_size]; // Double the sampling factor for security
+    int bi, rand_start, bpos;
+    double sampling_factor = (double)batch_size / num_points * 2;
+    // END Mini-batch variables
+    
     for(int iter=0; iter < numIter; iter++){
+        // Sampling (batch creation)
+        if(batch_size == num_points){
+            // In this case, the batch is the full point set
+            for(i=0; i<batch_size; i++){
+                b[i] = i;
+            }
+            std::cout << "here" << std::endl;
+        }
+        else{
+            // Some tricks for proper randomization. Point colision exists, but is minimized
+            bi = 0;
+            rand_start = (int) ( (double)rand() * num_points / RAND_MAX );
+            while(bi < batch_size){
+                for(i=0; i<num_points; i++){
+                    bpos = i + rand_start;
+                    if(bpos >= num_points) bpos -= num_points;
+                    r = (double)rand() / RAND_MAX; 
+                    if(r < sampling_factor){
+                        b[bi] = bpos;
+                        bi++;
+                        if(bi >= batch_size) break;
+                    }
+                }
+            }
+        }
+        
         // Maximization
         *loss = 0;
         d = std::numeric_limits<float>::max();
-        for(i=0; i<featureMatrix->nFeaturesVectors; i++){
+        for(i=0; i<batch_size; i++){
             for(j=0; j<numberOfCluster; j++){
-                di = vectorEuclideanDistance(featureMatrix->featureVector[i],
+                di = vectorManhattanDistance(featureMatrix->featureVector[b[i]],
                                              dict->featureVector[j]);
                 if(di < d){
                     d = di;
@@ -369,13 +412,13 @@ FeatureMatrix* kMeansClustering(FeatureMatrix* featureMatrix,
                 dict->featureVector[j]->features[k] = 0; // Reinitializing centroids
             }
         }
-        for(i=0; i<featureMatrix->nFeaturesVectors; i++){
-            j = labels[i];
+        for(i=0; i<batch_size; i++){
+            j = labels[b[i]];
             counts[j]++;
             // Summing all points from same clusters
             for(k=0; k<dim; k++){
                 dict->featureVector[j]->features[k] +=
-                    featureMatrix->featureVector[i]->features[k];
+                    featureMatrix->featureVector[b[i]]->features[k];
             }
         }
         for(j=0; j<numberOfCluster; j++){
@@ -421,7 +464,7 @@ FeatureVector* computeHardVBoW(FeatureVector* fv, FeatureMatrix* dict, float th)
     FeatureVector* vbow = createFeatureVector(dict->nFeaturesVectors);
     float diff;
     for(int i=0; i<dict->nFeaturesVectors; i++){
-        diff = vectorCosineDistance(fv, dict->featureVector[i]);
+        diff = vectorManhattanDistance(fv, dict->featureVector[i]);
         if(diff < th){
             vbow->features[i] = 1;
         }
