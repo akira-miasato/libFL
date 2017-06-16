@@ -371,7 +371,6 @@ FeatureMatrix* kMeansClustering(FeatureMatrix* featureMatrix,
             for(i=0; i<batch_size; i++){
                 b[i] = i;
             }
-            std::cout << "here" << std::endl;
         }
         else{
             // Some tricks for proper randomization. Point colision exists, but is minimized
