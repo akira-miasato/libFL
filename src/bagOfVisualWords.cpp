@@ -408,12 +408,14 @@ FeatureMatrix* kMeansClustering(FeatureMatrix* featureMatrix,
         // Expectation
         for(j=0; j<numberOfCluster; j++){
             counts[j] = 0; // Zeroing counts
-            for(k=0; k<dim; k++){
-                dict->featureVector[j]->features[k] = 0; // Reinitializing centroids
-            }
         }
         for(i=0; i<batch_size; i++){
             j = labels[b[i]];
+            if(counts[j] == 0){
+                for(k=0; k<dim; k++){
+                    dict->featureVector[j]->features[k] = 0; // Reinitializing centroid
+                }
+            }
             counts[j]++;
             // Summing all points from same clusters
             for(k=0; k<dim; k++){

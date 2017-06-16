@@ -64,7 +64,7 @@ FeatureMatrix* kMeansClustering(FeatureMatrix* featureMatrix,
                                 int numberOfCluster,
                                 float* loss,
                                 int numIter=20,
-                                int batch_size=200
+                                int batch_size=10000
                                );
 
 FeatureVector* computeSoftVBoW(FeatureVector* fv, FeatureMatrix* dict);
