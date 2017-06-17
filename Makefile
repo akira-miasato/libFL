@@ -13,7 +13,7 @@ FLLIBSVMINCLUDES = -I./externals/libsvm/include
 INCLUDEALL = $(FLLIBPNGINCLUDES) $(FLLIBJPEGINCLUDES) $(FLLIBSVMINCLUDES) -I$(INCLUDE)
 
 #FLAGS= -g  -O0 -Wall -D _DEBUG -Wno-unused-result -fPIC -std=gnu99 -pedantic
-FLAGS=  -O3 -Wall -Wno-unused-result -pedantic -Wno-write-strings  -fsanitize=address -fopenmp
+FLAGS=  -O3 -DNDEBUG -Wall -Wno-unused-result -pedantic -Wno-write-strings  -fsanitize=address -fopenmp
 FLAGSIM =   $(FLAGS)
 #-std=gnu99
 

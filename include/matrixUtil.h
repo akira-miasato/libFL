@@ -11,8 +11,8 @@
 
 inline double computeDistanceBetweenRows(Matrix* matrix1, Matrix* matrix2,
                                          size_t indexRow_Source ,size_t indexRow_Target,
-                                         DistanceFunction distanceFunction,
-                                         ArgumentList* argumentList){
+                                         DistanceFunction distanceFunction = computeNormalizedL1Norm,
+                                         ArgumentList* argumentList = NULL){
 
     size_t nCols = matrix2->numberColumns;
     float *vec_source = ((float*)matrix1->matrixData->data) + (indexRow_Source*matrix1->numberColumns);

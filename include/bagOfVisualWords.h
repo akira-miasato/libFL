@@ -78,6 +78,8 @@ GVector* gridSamplingBow(Image* image, BagOfVisualWordsManager* bagOfVisualWords
 //
 //
 Matrix* computeColorHistogramBow(GVector* vector,BagOfVisualWordsManager* bagOfVisualWordsManager);
+Matrix* computeHOGBow(GVector* vector,BagOfVisualWordsManager* bagOfVisualWordsManager);
+Matrix* computeHOGPerChannelBow(GVector* vector,BagOfVisualWordsManager* bagOfVisualWordsManager);
 //
 //
 Matrix* kmeansClusteringBow(Matrix* featureMatrix, BagOfVisualWordsManager* bagOfVisualWordsManager);
@@ -85,7 +87,7 @@ Matrix* kmeansClusteringBow(Matrix* featureMatrix, BagOfVisualWordsManager* bagO
 //
 GVector* computeCountHistogram_bow(Matrix* featureMatrix,BagOfVisualWordsManager* bagOfVisualWordsManager);
 //
-
+GVector* computeCountHistogram_softBow(Matrix* featureMatrix,BagOfVisualWordsManager* bagOfVisualWordsManager);
 
 
 void computeDictionery(BagOfVisualWordsManager* bagOfVisualWordsManager);

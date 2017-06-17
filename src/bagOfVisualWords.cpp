@@ -3,7 +3,7 @@
 //
 
 #include "bagOfVisualWords.h"
-
+#include "matrixUtil.h"
 
 BagOfVisualWordsManager* createBagOfVisualWordsManager(){
     BagOfVisualWordsManager* bowManager = (BagOfVisualWordsManager*)calloc(1,sizeof(BagOfVisualWordsManager));
@@ -100,7 +100,6 @@ GVector* gridSamplingBow(Image* image, BagOfVisualWordsManager* bagOfVisualWords
 }
 
 
-
 Matrix* computeColorHistogramBow(GVector* vector,BagOfVisualWordsManager* bagOfVisualWordsManager){
     ArgumentList* argumentList = bagOfVisualWordsManager->argumentListOfFeatureExtractor;
     if(argumentList->length < 2){
@@ -114,6 +113,34 @@ Matrix* computeColorHistogramBow(GVector* vector,BagOfVisualWordsManager* bagOfV
     size_t nbinsPerChannel = ARGLIST_GET_ELEMENT_AS(size_t,argumentList,0);
     size_t totalBins = ARGLIST_GET_ELEMENT_AS(size_t,argumentList,1);
     return computeColorHistogram(vector,nbinsPerChannel,totalBins);
+}
+
+Matrix* computeHOGBow(GVector* vector,BagOfVisualWordsManager* bagOfVisualWordsManager){
+    ArgumentList* argumentList = bagOfVisualWordsManager->argumentListOfFeatureExtractor;
+    if(argumentList->length < 1){
+        printf("[computeColorHistogram] invalid argument list");
+        return NULL;
+    }
+    if(vector->size == 0){
+        printf("[computeColorHistogram] vector has 0 elements");
+        return NULL;
+    }
+    size_t nbins = ARGLIST_GET_ELEMENT_AS(size_t,argumentList,0);
+    return computeHOG(vector, nbins);
+}
+
+Matrix* computeHOGPerChannelBow(GVector* vector,BagOfVisualWordsManager* bagOfVisualWordsManager){
+    ArgumentList* argumentList = bagOfVisualWordsManager->argumentListOfFeatureExtractor;
+    if(argumentList->length < 1){
+        printf("[computeColorHistogram] invalid argument list");
+        return NULL;
+    }
+    if(vector->size == 0){
+        printf("[computeColorHistogram] vector has 0 elements");
+        return NULL;
+    }
+    size_t nbins = ARGLIST_GET_ELEMENT_AS(size_t,argumentList,0);
+    return computeHOG(vector, nbins, true);
 }
 
 
@@ -333,6 +360,26 @@ GVector* computeCountHistogram_bow(Matrix* featureMatrix,BagOfVisualWordsManager
     }
     return bowHistogram;
 }
+
+GVector* computeCountHistogram_softBow(Matrix* featureMatrix,BagOfVisualWordsManager* bagOfVisualWordsManager){
+    GVector* bowHistogram = createNullVector(bagOfVisualWordsManager->dictionery->numberRows,sizeof(float));
+    double l1norm;
+    double dist;
+    for (size_t patchIndex = 0; patchIndex < featureMatrix->numberRows; ++patchIndex) {
+        l1norm = 0;
+        for (size_t wordIndex = 0; wordIndex < bagOfVisualWordsManager->dictionery->numberRows; ++wordIndex){
+            dist = computeDistanceBetweenRows(featureMatrix, bagOfVisualWordsManager->dictionery,
+                                              patchIndex, wordIndex);
+            VECTOR_GET_ELEMENT_AS(float, bowHistogram, wordIndex) += dist;
+            l1norm += dist;
+        }
+    }
+    for (size_t i = 0; i < bowHistogram->size; ++i) {
+        VECTOR_GET_ELEMENT_AS(float,bowHistogram,i) /= l1norm;
+    }
+    return bowHistogram;
+}
+
 
 
 Matrix* kmeansClusteringBow(Matrix* featureMatrix, BagOfVisualWordsManager* bagOfVisualWordsManager){

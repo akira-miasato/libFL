@@ -13,6 +13,8 @@
 
 Matrix* computeColorHistogram(GVector* vector_images,size_t nbinsPerChannel,size_t totalNumberBins);
 
+Matrix* computeHOG(GVector* vector_images, size_t nbins, bool perChannel=false);
+
 
 
 #endif //LIBFL_FEATUREEXTRACTOR_H
