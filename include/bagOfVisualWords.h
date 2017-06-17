@@ -37,10 +37,10 @@ typedef Matrix* (*ClusteringFunction)(Matrix* outputFeatureExtractor_allSamples,
 typedef GVector* (*MountHistogramFunction) (Matrix* outputFeatureExtractor_singleSample,BagOfVisualWordsManager* bagOfVisualWordsManager);
 
 typedef struct _bagOfVisualWordsManager {
-        GVector* pathsToImages_dictionery;
+        GVector* pathsToImages_dictionary;
         GVector* pathsToImages_train;
         GVector* pathsToImages_test;
-        Matrix* dictionery;
+        Matrix* dictionary;
 
         Matrix* histogramsTraining;
         GVector* labelsTraining;
@@ -78,11 +78,13 @@ void destroyBagOfVisualWordsManager(BagOfVisualWordsManager** pBagOfVisualWordsM
 
 //
 GVector* gridSamplingBow(Image* image, BagOfVisualWordsManager* bagOfVisualWordsManager);
+GVector* randomSamplingBow(Image* image, BagOfVisualWordsManager* bagOfVisualWordsManager);
 //
 //
 Matrix* computeColorHistogramBow(GVector* vector,BagOfVisualWordsManager* bagOfVisualWordsManager);
 Matrix* computeHOGBow(GVector* vector,BagOfVisualWordsManager* bagOfVisualWordsManager);
 Matrix* computeHOGPerChannelBow(GVector* vector,BagOfVisualWordsManager* bagOfVisualWordsManager);
+Matrix* computeMergedFeats(GVector* vector,BagOfVisualWordsManager* bagOfVisualWordsManager);
 //
 //
 Matrix* kmeansClusteringBow(Matrix* featureMatrix, BagOfVisualWordsManager* bagOfVisualWordsManager);
@@ -93,7 +95,7 @@ GVector* computeCountHistogram_bow(Matrix* featureMatrix,BagOfVisualWordsManager
 GVector* computeCountHistogram_softBow(Matrix* featureMatrix,BagOfVisualWordsManager* bagOfVisualWordsManager);
 
 
-void computeDictionery(BagOfVisualWordsManager* bagOfVisualWordsManager);
+void computeDictionary(BagOfVisualWordsManager* bagOfVisualWordsManager);
 void trainClassifier(BagOfVisualWordsManager* bagOfVisualWordsManager);
 GVector* predictLabels(BagOfVisualWordsManager* bagOfVisualWordsManager);
 

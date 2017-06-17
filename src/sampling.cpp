@@ -1,7 +1,7 @@
 //
 // Created by deangeli on 5/20/17.
 //
-
+#include <random>
 #include "sampling.h"
 
 GVector* gridSampling(Image* image, size_t patchSizeX,size_t patchSizeY){
@@ -14,6 +14,34 @@ GVector* gridSampling(Image* image, size_t patchSizeX,size_t patchSizeY){
         for (size_t x = 0; x <= (size_t)image->nx-patchSizeX; x += patchSizeX) {
             VECTOR_GET_ELEMENT_AS(Image*,vector_images,k) = extractSubImage(image,x,y,patchSizeX,patchSizeY,true);
             k++;
+        }
+    }
+    return vector_images;
+}
+
+
+GVector* randomSampling(Image* image, size_t patchSizeX, size_t patchSizeY, size_t nPatchs){
+    size_t xSlide = image->nx - patchSizeX;
+    size_t ySlide = image->ny - patchSizeY;
+    float samplingFactor = (float)nPatchs / (ySlide * xSlide);
+    size_t offX = (float) rand() * xSlide / RAND_MAX ;
+    size_t offY = (float) rand() * ySlide / RAND_MAX ;
+    GVector* vector_images = createNullVector(nPatchs,sizeof(Image*));
+    size_t k = 0;
+    while(k < nPatchs){
+        for (size_t y = 0; y <= (size_t)image->ny-patchSizeY; y++) {
+            size_t yo = y + offY;
+            if(yo > ySlide) yo -= ySlide;
+            for (size_t x = 0; x <= (size_t)image->nx-patchSizeX; x++) {
+                size_t xo = x + offX;
+                if(xo > ySlide) xo -= xSlide;
+                if((float) rand() / RAND_MAX < samplingFactor){
+                    VECTOR_GET_ELEMENT_AS(Image*,vector_images,k) = extractSubImage(image,xo,yo,patchSizeX,patchSizeY,true);
+                    k++;
+                    if(k == nPatchs) break;
+                }
+            }
+            if(k == nPatchs) break;
         }
     }
     return vector_images;

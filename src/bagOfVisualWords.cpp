@@ -39,10 +39,10 @@ void applyMVN(Matrix* features, float* means, float* variances){
 
 BagOfVisualWordsManager* createBagOfVisualWordsManager(){
     BagOfVisualWordsManager* bowManager = (BagOfVisualWordsManager*)calloc(1,sizeof(BagOfVisualWordsManager));
-    bowManager->pathsToImages_dictionery = NULL;
+    bowManager->pathsToImages_dictionary = NULL;
     bowManager->pathsToImages_train = NULL;
     bowManager->pathsToImages_test = NULL;
-    bowManager->dictionery = NULL;
+    bowManager->dictionary = NULL;
     bowManager->featureExtractorFunction = NULL;
     bowManager->imageSamplerFunction = NULL;
     bowManager->clusteringFunction = NULL;
@@ -68,7 +68,7 @@ void destroyBagOfVisualWordsManager(BagOfVisualWordsManager** pBagOfVisualWordsM
         return;
     }
 
-    destroyVector(&(aux->pathsToImages_dictionery));
+    destroyVector(&(aux->pathsToImages_dictionary));
     destroyVector(&(aux->pathsToImages_train));
     destroyVector(&(aux->pathsToImages_test));
     destroyVector(&(aux->labelsTraining));
@@ -80,7 +80,7 @@ void destroyBagOfVisualWordsManager(BagOfVisualWordsManager** pBagOfVisualWordsM
     destroyArgumentList(&(aux->argumentListOfDistanceFunction));
     destroyArgumentList(&(aux->argumentListOfHistogramMounter));
 
-    destroyMatrix(&(aux->dictionery));
+    destroyMatrix(&(aux->dictionary));
     destroyMatrix(&(aux->histogramsTraining));
     destroyMatrix(&(aux->histogramsPredictSamples));
     
@@ -136,6 +136,19 @@ GVector* gridSamplingBow(Image* image, BagOfVisualWordsManager* bagOfVisualWords
     return NULL;
 }
 
+GVector* randomSamplingBow(Image* image, BagOfVisualWordsManager* bagOfVisualWordsManager){
+    ArgumentList* argumentList = bagOfVisualWordsManager->argumentListOfSampler;
+
+    if(argumentList->length != 3){
+        printf("[randomSampling] invalid argument list");
+        return NULL;
+    }
+    size_t patchSizeX = ARGLIST_GET_ELEMENT_AS(size_t,argumentList,0);
+    size_t patchSizeY = ARGLIST_GET_ELEMENT_AS(size_t,argumentList,1);
+    size_t nPatches = ARGLIST_GET_ELEMENT_AS(size_t,argumentList,2);
+    return randomSampling(image,patchSizeX,patchSizeY,nPatches);
+}
+
 
 Matrix* computeColorHistogramBow(GVector* vector,BagOfVisualWordsManager* bagOfVisualWordsManager){
     ArgumentList* argumentList = bagOfVisualWordsManager->argumentListOfFeatureExtractor;
@@ -155,11 +168,11 @@ Matrix* computeColorHistogramBow(GVector* vector,BagOfVisualWordsManager* bagOfV
 Matrix* computeHOGBow(GVector* vector,BagOfVisualWordsManager* bagOfVisualWordsManager){
     ArgumentList* argumentList = bagOfVisualWordsManager->argumentListOfFeatureExtractor;
     if(argumentList->length < 1){
-        printf("[computeColorHistogram] invalid argument list");
+        printf("[computeHOG] invalid argument list");
         return NULL;
     }
     if(vector->size == 0){
-        printf("[computeColorHistogram] vector has 0 elements");
+        printf("[computeHOG] vector has 0 elements");
         return NULL;
     }
     size_t nbins = ARGLIST_GET_ELEMENT_AS(size_t,argumentList,0);
@@ -169,11 +182,11 @@ Matrix* computeHOGBow(GVector* vector,BagOfVisualWordsManager* bagOfVisualWordsM
 Matrix* computeHOGPerChannelBow(GVector* vector,BagOfVisualWordsManager* bagOfVisualWordsManager){
     ArgumentList* argumentList = bagOfVisualWordsManager->argumentListOfFeatureExtractor;
     if(argumentList->length < 1){
-        printf("[computeColorHistogram] invalid argument list");
+        printf("[computeHOGPerChannel] invalid argument list");
         return NULL;
     }
     if(vector->size == 0){
-        printf("[computeColorHistogram] vector has 0 elements");
+        printf("[computeHOGPerChannel] vector has 0 elements");
         return NULL;
     }
     size_t nbins = ARGLIST_GET_ELEMENT_AS(size_t,argumentList,0);
@@ -181,27 +194,45 @@ Matrix* computeHOGPerChannelBow(GVector* vector,BagOfVisualWordsManager* bagOfVi
 }
 
 
-void computeDictionery(BagOfVisualWordsManager* bagOfVisualWordsManager){
+Matrix* computeMergedFeats(GVector* vector,BagOfVisualWordsManager* bagOfVisualWordsManager){
+    ArgumentList* argumentList = bagOfVisualWordsManager->argumentListOfFeatureExtractor;
+    if(argumentList->length != 3){
+        printf("[computeMergedFeats] invalid argument list");
+        return NULL;
+    }
+    size_t colorBins = ARGLIST_GET_ELEMENT_AS(size_t,argumentList,0);
+    size_t totalColorBins = ARGLIST_GET_ELEMENT_AS(size_t,argumentList,1);
+    size_t gradientBins = ARGLIST_GET_ELEMENT_AS(size_t,argumentList,2);
+    Matrix* colorFeats = computeColorHistogram(vector,colorBins,totalColorBins);
+    Matrix* hogFeats = computeHOG(vector, gradientBins);
+    Matrix* feats = stackHorizontallyMatrices(colorFeats, hogFeats);
+    destroyMatrix(&colorFeats);
+    destroyMatrix(&hogFeats);
+    return feats;
+}
+
+
+void computeDictionary(BagOfVisualWordsManager* bagOfVisualWordsManager){
     Matrix* allFeatures = NULL;
     if(!bagOfVisualWordsManager->imageSamplerFunction){
-        printf("[computeDictionery] Sampler function not defined\n");
+        printf("[computeDictionary] Sampler function not defined\n");
     }
 
     if(!bagOfVisualWordsManager->featureExtractorFunction){
-        printf("[computeDictionery] Feature extractor function not defined\n");
+        printf("[computeDictionary] Feature extractor function not defined\n");
         return;
     }
     if(!bagOfVisualWordsManager->clusteringFunction){
-        printf("[computeDictionery] Clustering function not defined\n");
+        printf("[computeDictionary] Clustering function not defined\n");
         return;
     }
 
-    printf("[computeDictionery] Generating visual words...\n");
-    for (size_t i = 0; i < bagOfVisualWordsManager->pathsToImages_dictionery->size; ++i) {
-        char* imagePath = VECTOR_GET_ELEMENT_AS(char*,bagOfVisualWordsManager->pathsToImages_dictionery,i);
+    printf("[computeDictionary] Generating visual words...\n");
+    for (size_t i = 0; i < bagOfVisualWordsManager->pathsToImages_dictionary->size; ++i) {
+        char* imagePath = VECTOR_GET_ELEMENT_AS(char*,bagOfVisualWordsManager->pathsToImages_dictionary,i);
         Image* image = readImage(imagePath);
         if(image == NULL){
-            printf("[computeDictionery] invalid image path: %s",imagePath);
+            printf("[computeDictionary] invalid image path: %s",imagePath);
             continue;
         }
         GVector* samplingResults = NULL;
@@ -234,11 +265,11 @@ void computeDictionery(BagOfVisualWordsManager* bagOfVisualWordsManager){
              bagOfVisualWordsManager->means,
              bagOfVisualWordsManager->variances);
 
-    printf("[computeDictionery] Finding Visual words...\n");
-    bagOfVisualWordsManager->dictionery = bagOfVisualWordsManager->clusteringFunction(allFeatures,
+    printf("[computeDictionary] Finding Visual words...\n");
+    bagOfVisualWordsManager->dictionary = bagOfVisualWordsManager->clusteringFunction(allFeatures,
                                                 bagOfVisualWordsManager);
     destroyMatrix(&allFeatures);
-    printf("[computeDictionery] Dictioney computed\n");
+    printf("[computeDictionary] Dictionary computed\n");
 }
 
 void trainClassifier(BagOfVisualWordsManager* bagOfVisualWordsManager){
@@ -251,8 +282,8 @@ void trainClassifier(BagOfVisualWordsManager* bagOfVisualWordsManager){
         printf("[trainClassifier] Feature extractor function not defined\n");
         return;
     }
-    if(bagOfVisualWordsManager->dictionery == NULL){
-        printf("[trainClassifier] Dictionery is empty\n");
+    if(bagOfVisualWordsManager->dictionary == NULL){
+        printf("[trainClassifier] Dictionary is empty\n");
         return;
     }
     if(bagOfVisualWordsManager->mountHistogramFunction == NULL){
@@ -266,7 +297,7 @@ void trainClassifier(BagOfVisualWordsManager* bagOfVisualWordsManager){
 
 
     Matrix *bowHistograms = createMatrix(bagOfVisualWordsManager->pathsToImages_train->size,
-                                         bagOfVisualWordsManager->dictionery->numberRows,
+                                         bagOfVisualWordsManager->dictionary->numberRows,
                                          sizeof(float));
     GVector *imagesLabels = createNullVector(bagOfVisualWordsManager->pathsToImages_train->size,sizeof(int));
     //Matrix *bowHistograms = NULL;
@@ -275,7 +306,7 @@ void trainClassifier(BagOfVisualWordsManager* bagOfVisualWordsManager){
         char* imagePath = VECTOR_GET_ELEMENT_AS(char*,bagOfVisualWordsManager->pathsToImages_train,index);
         Image* image = readImage(imagePath);
         if(image == NULL){
-            printf("[computeDictionery] Invalid image path: %s",imagePath);
+            printf("[computeDictionary] Invalid image path: %s",imagePath);
             continue;
         }
         GVector* samplingResults = NULL;
@@ -334,8 +365,8 @@ GVector* predictLabels(BagOfVisualWordsManager* bagOfVisualWordsManager){
         printf("[predictLabels] Feature extractor function not defined\n");
         return NULL;
     }
-    if(bagOfVisualWordsManager->dictionery == NULL){
-        printf("[predictLabels] Dictionery is empty\n");
+    if(bagOfVisualWordsManager->dictionary == NULL){
+        printf("[predictLabels] Dictionary is empty\n");
         return NULL;
     }
     if(bagOfVisualWordsManager->mountHistogramFunction == NULL){
@@ -347,7 +378,7 @@ GVector* predictLabels(BagOfVisualWordsManager* bagOfVisualWordsManager){
         return NULL;
     }
     Matrix *bowHistograms = createMatrix(bagOfVisualWordsManager->pathsToImages_test->size,
-                                         bagOfVisualWordsManager->dictionery->numberRows,
+                                         bagOfVisualWordsManager->dictionary->numberRows,
                                          sizeof(float));
     printf("[predictLabels] Generating histograms and labels from images\n");
     for (size_t index = 0; index < bagOfVisualWordsManager->pathsToImages_test->size; ++index) {
@@ -401,9 +432,9 @@ GVector* predictLabels(BagOfVisualWordsManager* bagOfVisualWordsManager){
 }
 
 GVector* computeCountHistogram_bow(Matrix* featureMatrix,BagOfVisualWordsManager* bagOfVisualWordsManager){
-    GVector* bowHistogram = createNullVector(bagOfVisualWordsManager->dictionery->numberRows,sizeof(float));
+    GVector* bowHistogram = createNullVector(bagOfVisualWordsManager->dictionary->numberRows,sizeof(float));
     for (size_t patchIndex = 0; patchIndex < featureMatrix->numberRows; ++patchIndex) {
-        size_t nearestClusterIndex = findNearestRow(bagOfVisualWordsManager->dictionery,
+        size_t nearestClusterIndex = findNearestRow(bagOfVisualWordsManager->dictionary,
                                                     featureMatrix,patchIndex,
                                                     bagOfVisualWordsManager->distanceFunction,
                                                     bagOfVisualWordsManager->argumentListOfDistanceFunction);
@@ -416,13 +447,13 @@ GVector* computeCountHistogram_bow(Matrix* featureMatrix,BagOfVisualWordsManager
 }
 
 GVector* computeCountHistogram_softBow(Matrix* featureMatrix,BagOfVisualWordsManager* bagOfVisualWordsManager){
-    GVector* bowHistogram = createNullVector(bagOfVisualWordsManager->dictionery->numberRows,sizeof(float));
+    GVector* bowHistogram = createNullVector(bagOfVisualWordsManager->dictionary->numberRows,sizeof(float));
     double l1norm;
     double dist;
     for (size_t patchIndex = 0; patchIndex < featureMatrix->numberRows; ++patchIndex) {
         l1norm = 0;
-        for (size_t wordIndex = 0; wordIndex < bagOfVisualWordsManager->dictionery->numberRows; ++wordIndex){
-            dist = computeDistanceBetweenRows(featureMatrix, bagOfVisualWordsManager->dictionery,
+        for (size_t wordIndex = 0; wordIndex < bagOfVisualWordsManager->dictionary->numberRows; ++wordIndex){
+            dist = computeDistanceBetweenRows(featureMatrix, bagOfVisualWordsManager->dictionary,
                                               patchIndex, wordIndex);
             VECTOR_GET_ELEMENT_AS(float, bowHistogram, wordIndex) += dist;
             l1norm += dist;

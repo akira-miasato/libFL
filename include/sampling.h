@@ -9,6 +9,6 @@
 #include "image.h"
 
 GVector* gridSampling(Image* image, size_t patchSizeX,size_t patchSizeY);
-
+GVector* randomSampling(Image* image, size_t patchSizeX, size_t patchSizeY, size_t nPatchs);
 
 #endif //LIBFL_SAMPLING_H

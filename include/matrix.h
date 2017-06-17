@@ -20,6 +20,7 @@ Matrix* createMatrix(size_t nrows, size_t ncols); //default double
 Matrix* createMatrix(GVector* vector);
 Matrix* stackVerticallyMatrices(Matrix* matrix1, Matrix* matrix2);
 Matrix* stackVerticallyMatrices(Matrix* matrix1, GVector* vector);
+Matrix* stackHorizontallyMatrices(Matrix* matrix1, Matrix* matrix2); // Currently only works for float-type matrices
 void reshapeMatrix(Matrix* matrix, size_t nrows, size_t ncols);
 void stackVerticallyMatricesInPlace(Matrix** matrix1, Matrix* matrix2);
 Matrix* stackVerticallyMatrices(Matrix* matrix1, Matrix* matrix2);

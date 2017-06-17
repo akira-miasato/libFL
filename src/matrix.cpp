@@ -160,6 +160,46 @@ Matrix* stackVerticallyMatrices(Matrix* matrix1, GVector* vector){
     return output;
 }
 
+/* Currently only works for float-type matrices */
+Matrix* stackHorizontallyMatrices(Matrix* matrix1, Matrix* matrix2){
+    if(matrix1 == NULL && matrix2 == NULL){
+        return NULL;
+    }
+    if(matrix2 == NULL){
+        return copyMatrix(matrix1);
+    }
+
+    if(matrix1 == NULL){
+         return copyMatrix(matrix2);
+    }
+
+    if(matrix1->numberRows != matrix2->numberRows){
+        printf("[stackVerticallyMatrices] matrices dimension mismatch\n");
+        return NULL;
+    }
+
+    if(matrix1->matrixData->elementSize != matrix2->matrixData->elementSize){
+        printf("[stackVerticallyMatrices] matrices have different data types\n");
+        return NULL;
+    }
+    size_t nRows = matrix1->numberRows;
+    size_t nCols = matrix1->numberColumns +  matrix2->numberColumns;;
+    Matrix* output = createMatrix(nRows,nCols,matrix1->matrixData->elementSize);
+
+    for(size_t i=1; i<matrix1->numberRows; ++i){
+        for(size_t j=0; j<matrix1->numberColumns; ++j){
+            MATRIX_GET_ELEMENT_PO_AS(float, output, i, j) = 
+                MATRIX_GET_ELEMENT_PO_AS(float, matrix1, i, j);
+        }
+        for(size_t j=0; j<matrix2->numberColumns; ++j){
+            MATRIX_GET_ELEMENT_PO_AS(float, output, i, j + matrix1->numberColumns) = 
+                MATRIX_GET_ELEMENT_PO_AS(float, matrix2, i, j);
+        }        
+    }
+
+    return output;
+}
+
 
 
 void destroyMatrix(Matrix **pMatrix){
