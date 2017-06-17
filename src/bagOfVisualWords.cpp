@@ -431,6 +431,162 @@ GVector* predictLabels(BagOfVisualWordsManager* bagOfVisualWordsManager){
     return labelsPredicted;
 }
 
+
+/* Very crude modification. Uses the datasets and classifier from the first manager only.*/
+void trainClassifier(std::vector<BagOfVisualWordsManager*> managers){
+    size_t numRows = 0;
+    if(managers[0]->fitFunction == NULL){
+        printf("[trainClassifier] Fit function not defined\n");
+        return;
+    }
+    for(BagOfVisualWordsManager* manager : managers){
+        if(!manager->imageSamplerFunction){
+            printf("[trainClassifier] Sampler function not defined\n");
+        }
+        if(!manager->featureExtractorFunction){
+            printf("[trainClassifier] Feature extractor function not defined\n");
+            return;
+        }
+        if(manager->dictionary == NULL){
+            printf("[trainClassifier] Dictionary is empty\n");
+            return;
+        }
+        if(manager->mountHistogramFunction == NULL){
+            printf("[trainClassifier] Mounter histogram function not defined\n");
+            return;
+        }
+        numRows += manager->dictionary->numberRows;
+    }
+
+    
+    Matrix *bowHistograms = createMatrix(managers[0]->pathsToImages_train->size,
+                                         numRows, sizeof(float));
+    GVector *imagesLabels = createNullVector(managers[0]->pathsToImages_train->size,sizeof(int));
+
+    printf("[trainClassifier] Generating histograms and labels from images\n");
+    for (size_t index = 0; index < managers[0]->pathsToImages_train->size; ++index) {
+        char* imagePath = VECTOR_GET_ELEMENT_AS(char*,managers[0]->pathsToImages_train,index);
+        Image* image = readImage(imagePath);
+        if(image == NULL){
+            printf("[computeDictionary] Invalid image path: %s",imagePath);
+            continue;
+        }
+        GVector* samplingResults = NULL;
+        size_t colOffset = 0;
+        for(BagOfVisualWordsManager* manager : managers){
+            if(manager->imageSamplerFunction){
+                samplingResults = manager->imageSamplerFunction(image,
+                                                                manager);
+                samplingResults->freeFunction = manager->freeFunction2SamplerOutput;
+            }else{
+                samplingResults = createNullVector(1,sizeof(Image*));
+                VECTOR_GET_ELEMENT_AS(Image*,samplingResults,0) = image;
+            }
+            Matrix* featureMatrix = manager->featureExtractorFunction(samplingResults, manager);
+            applyMVN(featureMatrix,
+                     manager->means,
+                     manager->variances);
+
+            GVector* histogram = manager->mountHistogramFunction(featureMatrix,manager);
+            for(size_t col=0; col < manager->dictionary->numberRows; col++){
+                MATRIX_GET_ELEMENT_PO_AS(float, bowHistograms, index, col + colOffset) = 
+                    VECTOR_GET_ELEMENT_AS(float, histogram, col);
+            }
+            colOffset += manager->dictionary->numberRows;
+            destroyMatrix(&featureMatrix);
+            destroyVector(&histogram);
+        }
+        VECTOR_GET_ELEMENT_AS(int,imagesLabels,index) = findTrueLabelInName(imagePath);
+
+        destroyImage(&image);
+        destroyVector(&samplingResults);
+    }
+
+    printf("[trainClassifier] Histograms and labels generated\n");
+    printf("[trainClassifier] Classifier  trainning...\n");
+    managers[0]->fitFunction(bowHistograms,imagesLabels,managers[0]->classifier);
+    printf("[trainClassifier] Classifier trained...\n");
+
+    destroyMatrix(&bowHistograms);
+    destroyVector(&imagesLabels);
+}
+
+
+GVector* predictLabels(std::vector<BagOfVisualWordsManager*> managers){
+    size_t numRows = 0;
+    if(managers[0]->fitFunction == NULL){
+        printf("[predictLabels] Fit function not defined\n");
+        return NULL;
+    }
+    for(BagOfVisualWordsManager* manager : managers){
+        if(!manager->imageSamplerFunction){
+            printf("[predictLabels] Sampler function not defined\n");
+        }
+        if(!manager->featureExtractorFunction){
+            printf("[predictLabels] Feature extractor function not defined\n");
+            return NULL;
+        }
+        if(manager->dictionary == NULL){
+            printf("[predictLabels] Dictionary is empty\n");
+            return NULL;
+        }
+        if(manager->mountHistogramFunction == NULL){
+            printf("[predictLabels] Mounter histogram function not defined\n");
+            return NULL;
+        }
+        numRows += manager->dictionary->numberRows;
+    }
+
+    
+    Matrix *bowHistograms = createMatrix(managers[0]->pathsToImages_test->size,
+                                         numRows, sizeof(float));
+    printf("[predictLabels] Generating histograms and labels from images\n");
+    for (size_t index = 0; index < managers[0]->pathsToImages_test->size; ++index) {
+        char* imagePath = VECTOR_GET_ELEMENT_AS(char*,managers[0]->pathsToImages_test,index);
+        Image* image = readImage(imagePath);
+        if(image == NULL){
+            printf("[computeDictionary] Invalid image path: %s",imagePath);
+            continue;
+        }
+        GVector* samplingResults = NULL;
+        size_t colOffset = 0;
+        for(BagOfVisualWordsManager* manager : managers){
+            if(manager->imageSamplerFunction){
+                samplingResults = manager->imageSamplerFunction(image,
+                                                                manager);
+                samplingResults->freeFunction = manager->freeFunction2SamplerOutput;
+            }else{
+                samplingResults = createNullVector(1,sizeof(Image*));
+                VECTOR_GET_ELEMENT_AS(Image*,samplingResults,0) = image;
+            }
+            Matrix* featureMatrix = manager->featureExtractorFunction(samplingResults, manager);
+            applyMVN(featureMatrix,
+                     manager->means,
+                     manager->variances);
+
+            GVector* histogram = manager->mountHistogramFunction(featureMatrix,manager);
+            for(size_t col=0; col < manager->dictionary->numberRows; col++){
+                MATRIX_GET_ELEMENT_PO_AS(float, bowHistograms, index, col + colOffset) = 
+                    VECTOR_GET_ELEMENT_AS(float, histogram, col);
+            }
+            colOffset += manager->dictionary->numberRows;
+            destroyMatrix(&featureMatrix);
+            destroyVector(&histogram);
+        }
+        destroyImage(&image);
+        destroyVector(&samplingResults);
+    }
+    printf("[predictLabels] Histograms and labels generated\n");
+    printf("[predictLabels] Predicting labels...\n");
+
+
+    GVector* labelsPredicted = managers[0]->predictFunction(bowHistograms,managers[0]->classifier);
+    printf("[predictLabels] Labels predicted...\n");
+    destroyMatrix(&bowHistograms);
+    return labelsPredicted;
+}
+
+
 GVector* computeCountHistogram_bow(Matrix* featureMatrix,BagOfVisualWordsManager* bagOfVisualWordsManager){
     GVector* bowHistogram = createNullVector(bagOfVisualWordsManager->dictionary->numberRows,sizeof(float));
     for (size_t patchIndex = 0; patchIndex < featureMatrix->numberRows; ++patchIndex) {

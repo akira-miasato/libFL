@@ -24,7 +24,7 @@
 #include "clustering.h"
 
 
-
+#include <vector>
 
 
 typedef struct _bagOfVisualWordsManager BagOfVisualWordsManager;
@@ -97,7 +97,9 @@ GVector* computeCountHistogram_softBow(Matrix* featureMatrix,BagOfVisualWordsMan
 
 void computeDictionary(BagOfVisualWordsManager* bagOfVisualWordsManager);
 void trainClassifier(BagOfVisualWordsManager* bagOfVisualWordsManager);
+void trainClassifier(std::vector<BagOfVisualWordsManager*> managers);
 GVector* predictLabels(BagOfVisualWordsManager* bagOfVisualWordsManager);
+GVector* predictLabels(std::vector<BagOfVisualWordsManager*> managers);
 
 
 
