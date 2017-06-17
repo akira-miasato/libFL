@@ -1,9 +1,41 @@
 //
 // Created by deangeli on 4/7/17.
 //
-
+#include <cmath>
 #include "bagOfVisualWords.h"
 #include "matrixUtil.h"
+
+/* Assumes all arguments are preallocated */
+void computeMVN(Matrix* features, float* means, float* variances){
+    // Running means and variances via Welford algorithm
+    for(size_t j=0; j<features->numberColumns; ++j){
+        means[j] = MATRIX_GET_ELEMENT_PO_AS(float, features, 0, j);  
+        variances[j] = 0;
+    }
+    for(size_t i=1; i<features->numberRows; ++i){
+        for(size_t j=0; j<features->numberColumns; ++j){
+            float current = MATRIX_GET_ELEMENT_PO_AS(float, features, i, j);
+            float old_mean = means[j];
+            means[j] += (current - means[j]) / i;
+            variances[j] += (current - old_mean) * (current - means[j]);
+        }
+    }
+    for(size_t j=0; j<features->numberColumns; ++j){
+        variances[j] /= (features->numberRows - 1);
+    }
+}
+
+/* Modifies matrix in place, assumes all arguments are preallocated */
+void applyMVN(Matrix* features, float* means, float* variances){
+    for(size_t i=1; i<features->numberRows; ++i){
+        for(size_t j=0; j<features->numberColumns; ++j){
+            MATRIX_GET_ELEMENT_PO_AS(float, features, i, j) -= means[j];
+            if(variances[j] != 0)
+                MATRIX_GET_ELEMENT_PO_AS(float, features, i, j) /= sqrt(variances[j]);
+        }
+    }
+}
+
 
 BagOfVisualWordsManager* createBagOfVisualWordsManager(){
     BagOfVisualWordsManager* bowManager = (BagOfVisualWordsManager*)calloc(1,sizeof(BagOfVisualWordsManager));
@@ -23,6 +55,8 @@ BagOfVisualWordsManager* createBagOfVisualWordsManager(){
     bowManager->freeFunctionClassifier = NULL;
     bowManager->histogramsTraining = NULL;
     bowManager->labelsTraining = NULL;
+    bowManager->means = NULL;
+    bowManager->variances = NULL;
     bowManager->storeTrainData = false;
     bowManager->storePredictedData = false;
     return bowManager;
@@ -49,6 +83,9 @@ void destroyBagOfVisualWordsManager(BagOfVisualWordsManager** pBagOfVisualWordsM
     destroyMatrix(&(aux->dictionery));
     destroyMatrix(&(aux->histogramsTraining));
     destroyMatrix(&(aux->histogramsPredictSamples));
+    
+    if(aux->means != NULL) free(aux->means);
+    if(aux->variances) free(aux->variances);
 
 
     if(aux->freeFunctionClassifier){
@@ -150,7 +187,6 @@ void computeDictionery(BagOfVisualWordsManager* bagOfVisualWordsManager){
         printf("[computeDictionery] Sampler function not defined\n");
     }
 
-
     if(!bagOfVisualWordsManager->featureExtractorFunction){
         printf("[computeDictionery] Feature extractor function not defined\n");
         return;
@@ -186,6 +222,17 @@ void computeDictionery(BagOfVisualWordsManager* bagOfVisualWordsManager){
         destroyVector(&samplingResults);
         destroyMatrix(&featureMatrix);
     }
+
+    printf("[meanVarianceNorm] Normalizing all features...\n");
+    bagOfVisualWordsManager->means = (float*)malloc(sizeof(float) * allFeatures->numberColumns);
+    bagOfVisualWordsManager->variances = (float*)malloc(sizeof(float) * allFeatures->numberColumns);
+
+    computeMVN(allFeatures,
+               bagOfVisualWordsManager->means,
+               bagOfVisualWordsManager->variances);
+    applyMVN(allFeatures,
+             bagOfVisualWordsManager->means,
+             bagOfVisualWordsManager->variances);
 
     printf("[computeDictionery] Finding Visual words...\n");
     bagOfVisualWordsManager->dictionery = bagOfVisualWordsManager->clusteringFunction(allFeatures,
@@ -241,6 +288,10 @@ void trainClassifier(BagOfVisualWordsManager* bagOfVisualWordsManager){
             VECTOR_GET_ELEMENT_AS(Image*,samplingResults,0) = image;
         }
         Matrix* featureMatrix = bagOfVisualWordsManager->featureExtractorFunction(samplingResults, bagOfVisualWordsManager);
+        applyMVN(featureMatrix,
+                 bagOfVisualWordsManager->means,
+                 bagOfVisualWordsManager->variances);
+
 
         GVector* histogram = bagOfVisualWordsManager->mountHistogramFunction(featureMatrix,bagOfVisualWordsManager);
         setRowValueGivenVector(bowHistograms,histogram,index);
@@ -316,6 +367,9 @@ GVector* predictLabels(BagOfVisualWordsManager* bagOfVisualWordsManager){
             VECTOR_GET_ELEMENT_AS(Image*,samplingResults,0) = image;
         }
         Matrix* featureMatrix = bagOfVisualWordsManager->featureExtractorFunction(samplingResults, bagOfVisualWordsManager);
+        applyMVN(featureMatrix,
+                 bagOfVisualWordsManager->means,
+                 bagOfVisualWordsManager->variances);
 
         GVector* histogram = bagOfVisualWordsManager->mountHistogramFunction(featureMatrix,bagOfVisualWordsManager);
         setRowValueGivenVector(bowHistograms,histogram,index);

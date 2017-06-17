@@ -51,6 +51,9 @@ typedef struct _bagOfVisualWordsManager {
         bool storePredictedData;
 
         void* classifier;
+        
+        float* means;
+        float* variances;
 
         FreeFunction freeFunction2SamplerOutput;
         FreeFunction freeFunctionClassifier;

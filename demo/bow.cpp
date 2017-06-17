@@ -6,13 +6,13 @@ int main(int argc, char **argv) {
 
     //Caminhos onde esta o arquivo txt gerado pelo o script python "selec_samples2.py"
     //os caminhos vao mudar para cada pessoa
-//     char const* const fileName_createDict = "/home/akira-miasato/data/img/coil100_train.txt";
-//     char const* const fileName_createTrain = "/home/akira-miasato/data/img/coil100_train.txt";
-//     char const* const fileName_createTest = "/home/akira-miasato/data/img/coil100_dev.txt";
+    char const* const fileName_createDict = "/home/akira-miasato/data/img/coil100_train.txt";
+    char const* const fileName_createTrain = "/home/akira-miasato/data/img/coil100_train.txt";
+    char const* const fileName_createTest = "/home/akira-miasato/data/img/coil100_dev.txt";
 
-    char const* const fileName_createDict = "/home/akira-miasato/data/img/pubfig_train.txt";
-    char const* const fileName_createTrain = "/home/akira-miasato/data/img/pubfig_train.txt";
-    char const* const fileName_createTest = "/home/akira-miasato/data/img/pubfig_dev.txt";
+//     char const* const fileName_createDict = "/home/akira-miasato/data/img/pubfig_train.txt";
+//     char const* const fileName_createTrain = "/home/akira-miasato/data/img/pubfig_train.txt";
+//     char const* const fileName_createTest = "/home/akira-miasato/data/img/pubfig_dev.txt";
     
     //cada posicao do vetor tem uma string para o caminho de uma imagem
     GVector* vectorSamplesUsed2CreateDict =  splitsLinesInTextFile(fileName_createDict);
@@ -59,8 +59,8 @@ int main(int argc, char **argv) {
     //Note que o cabecalho geral para a funcao de sammpling e
     //GVector* minhaFuncaoDeSampling(Image* image, BagOfVisualWordsManager* bagOfVisualWordsManager);
     ArgumentList* gridSamplingArguments = createArgumentList();
-    ARGLIST_PUSH_BACK_AS(size_t,gridSamplingArguments,25); //patch size X
-    ARGLIST_PUSH_BACK_AS(size_t,gridSamplingArguments,25); //patch size Y
+    ARGLIST_PUSH_BACK_AS(size_t,gridSamplingArguments,64); //patch size X
+    ARGLIST_PUSH_BACK_AS(size_t,gridSamplingArguments,64); //patch size Y
     bowManager->argumentListOfSampler = gridSamplingArguments;//passando a lista de argumentos para o bow manager
     //////////////////////////////////////////////////////////
 
@@ -93,16 +93,16 @@ int main(int argc, char **argv) {
     ///////////////////////////////////////
 
 
-//     /////////////////////////////////////////////////////////////////
-//     // HOG
-//     bowManager->featureExtractorFunction = computeHOGPerChannelBow;//ponteiro da funcao para a extracao de features
-//     //0 - vetor com as imagens dos patchs (esse argumento n'ao conta)
-//     //1 - numeros de bins angulares
-//     ArgumentList* hogArguments = createArgumentList();
-//     size_t nbins = 9;
-//     ARGLIST_PUSH_BACK_AS(size_t, hogArguments, nbins);
-//     bowManager->argumentListOfFeatureExtractor = hogArguments;
-//     ///////////////////////////////////////
+// //     /////////////////////////////////////////////////////////////////
+// //     // HOG
+// //     bowManager->featureExtractorFunction = computeHOGPerChannelBow;//ponteiro da funcao para a extracao de features
+// //     //0 - vetor com as imagens dos patchs (esse argumento n'ao conta)
+// //     //1 - numeros de bins angulares
+// //     ArgumentList* hogArguments = createArgumentList();
+// //     size_t nbins = 9;
+// //     ARGLIST_PUSH_BACK_AS(size_t, hogArguments, nbins);
+// //     bowManager->argumentListOfFeatureExtractor = hogArguments;
+// //     ///////////////////////////////////////
 
     ///////////////////////////////////////////////////////
     //Existem muitas maneiras de computar distancias entre pontos e vetores. A mais comum delas talvez
@@ -124,7 +124,7 @@ int main(int argc, char **argv) {
     ArgumentList* clusteringMethodArguments = createArgumentList();
     ARGLIST_PUSH_BACK_AS(size_t,clusteringMethodArguments,numberOfVisualWords); //number of words
     ARGLIST_PUSH_BACK_AS(size_t,clusteringMethodArguments,100); //maximum number of iterations
-    ARGLIST_PUSH_BACK_AS(double,clusteringMethodArguments,0.00005); //tolerance
+    ARGLIST_PUSH_BACK_AS(double,clusteringMethodArguments, 1e-8); //tolerance
     ARGLIST_PUSH_BACK_AS(int,clusteringMethodArguments,0); //seed
     ARGLIST_PUSH_BACK_AS(DistanceFunction,clusteringMethodArguments,computeNormalizedL1Norm); //seed
     ARGLIST_PUSH_BACK_AS(ArgumentList*,clusteringMethodArguments,NULL); //seed
