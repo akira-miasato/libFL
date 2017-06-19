@@ -7,17 +7,18 @@ project(libFL C CXX)
 set(CMAKE_VERBOSE_MAKEFILE "ON")
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+set(CMAKE_C_COMPILER clang)
+set(CMAKE_CXX_COMPILER clang++)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -std=c++11 -fopenmp=libomp")
 
 find_package(Threads REQUIRED)
 
 message(STATUS ${CMAKE_MODULE_PATH})
 
 find_package( CBLAS REQUIRED )
+
 find_package( LAPACK REQUIRED )
 find_package(OpenMP)
 if (OPENMP_FOUND)
@@ -50,13 +51,14 @@ endforeach(libflsourcefile ${LIBFL_SRC})
 file(GLOB EXTERNAL_INCLUDE_DIRS "${CMAKE_SOURCE_DIR}/externals/*/include")
 file(GLOB EXTERNAL_LIBRARIES "${CMAKE_SOURCE_DIR}/externals/*/lib/*.a")
     
-add_library(libfl STATIC ${LIBFL_SRC} ${LIBFL_INCLUDE})
+add_library(fl STATIC ${LIBFL_SRC} ${LIBFL_INCLUDE})
 
-target_include_directories(libfl PUBLIC ${EXTERNAL_INCLUDE_DIRS})
-target_link_libraries(libfl
+target_include_directories(fl PUBLIC ${EXTERNAL_INCLUDE_DIRS})
+target_link_libraries(fl
                       ${CMAKE_SOURCE_DIR}/externals/libjpeg/lib/libjpeg.a
                       ${CMAKE_SOURCE_DIR}/externals/libpng/lib/libpng.a
                       ${CMAKE_SOURCE_DIR}/externals/libsvm/lib/libsvm.a
+                      ${CMAKE_SOURCE_DIR}/externals/isf/lib/libift.a
                       ${CMAKE_SOURCE_DIR}/externals/zlib/lib/zlib.a)
 
 file(GLOB LIBFL_DEMO
@@ -75,15 +77,7 @@ foreach( demosourcefile ${LIBFL_DEMO} )
     message(STATUS "\t${demosourcefile}")
 
     add_executable( ${demoname} ${demosourcefile})
-    target_link_libraries( ${demoname} libfl ${LAPACK_LIBRARIES} ${CBLAS_LIBRARIES} stdc++)
+    target_link_libraries( ${demoname} fl ${LAPACK_LIBRARIES} ${CBLAS_LIBRARIES} stdc++)
 
-    #install(TARGETS ${demoname} RUNTIME DESTINATION bin)
-
-    #remove demo from make all
-    #set_target_properties(${demoname} PROPERTIES EXCLUDE_FROM_ALL 1 EXCLUDE_FROM_DEFAULT_BUILD 1)
 endforeach( demosourcefile ${LIBFL_DEMO} )
 
-install (TARGETS libfl
-         ARCHIVE DESTINATION libfl
-         LIBRARY DESTINATION libfl
-        )#RUNTIME DESTINATION bin)

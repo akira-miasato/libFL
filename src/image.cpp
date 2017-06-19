@@ -86,7 +86,7 @@ void findAppropriateColorSpace(Image* image){
     }else if(image->nchannels == 4){
         image->colorSpace = RGBA;
     }else{
-        image->colorSpace = UNKNOWN;
+        image->colorSpace = CS_UNKNOWN;
     }
 }
 
@@ -456,10 +456,10 @@ Image *readImagePNG(char *filename){
         colorSpace = RGBA;
     }else if(color_type == PNG_COLOR_TYPE_PALETTE){
         printf("[readImagePNG] PNG_COLOR_TYPE_PALETTE is not implemented yet\n");
-        colorSpace = UNKNOWN;
+        colorSpace = CS_UNKNOWN;
     }else{
         printf("[readImagePNG] PNG_COLOR_TYPE_ unknown\n");
-        colorSpace = UNKNOWN;
+        colorSpace = CS_UNKNOWN;
     }
     image = createImage(width,height,numberChannels);
     image->scalingFactor = pow(2,bit_depth)-1;
@@ -599,7 +599,7 @@ Image *readImageJPEG(char *filename){
         //return NULL;
     }else{
         printf("[readImageJPEG] unknown color space\n");
-        image->colorSpace = UNKNOWN;
+        image->colorSpace = CS_UNKNOWN;
     }
     unsigned  int imageRow = 0;
     while (cinfo.output_scanline < cinfo.output_height){

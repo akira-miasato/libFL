@@ -79,6 +79,7 @@ void destroyBagOfVisualWordsManager(BagOfVisualWordsManager** pBagOfVisualWordsM
 //
 GVector* gridSamplingBow(Image* image, BagOfVisualWordsManager* bagOfVisualWordsManager);
 GVector* randomSamplingBow(Image* image, BagOfVisualWordsManager* bagOfVisualWordsManager);
+GVector* iftSamplingBow(Image* image, BagOfVisualWordsManager* bagOfVisualWordsManager);
 //
 //
 Matrix* computeColorHistogramBow(GVector* vector,BagOfVisualWordsManager* bagOfVisualWordsManager);

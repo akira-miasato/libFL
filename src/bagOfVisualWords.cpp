@@ -150,6 +150,19 @@ GVector* randomSamplingBow(Image* image, BagOfVisualWordsManager* bagOfVisualWor
 }
 
 
+GVector* iftSamplingBow(Image* image, BagOfVisualWordsManager* bagOfVisualWordsManager){
+    ArgumentList* argumentList = bagOfVisualWordsManager->argumentListOfSampler;
+    if(argumentList->length != 2){
+        printf("[randomSampling] invalid argument list");
+        return NULL;
+    }
+    size_t patchSizeX = ARGLIST_GET_ELEMENT_AS(size_t,argumentList,0);
+    size_t patchSizeY = ARGLIST_GET_ELEMENT_AS(size_t,argumentList,1);
+    return iftSampling(image,patchSizeX,patchSizeY);
+}
+
+
+
 Matrix* computeColorHistogramBow(GVector* vector,BagOfVisualWordsManager* bagOfVisualWordsManager){
     ArgumentList* argumentList = bagOfVisualWordsManager->argumentListOfFeatureExtractor;
     if(argumentList->length < 2){
@@ -336,6 +349,7 @@ void trainClassifier(BagOfVisualWordsManager* bagOfVisualWordsManager){
 
     printf("[trainClassifier] Histograms and labels generated\n");
     printf("[trainClassifier] Classifier  trainning...\n");
+
     bagOfVisualWordsManager->fitFunction(bowHistograms,imagesLabels,bagOfVisualWordsManager->classifier);
     printf("[trainClassifier] Classifier trained...\n");
 
@@ -412,7 +426,6 @@ GVector* predictLabels(BagOfVisualWordsManager* bagOfVisualWordsManager){
     }
     printf("[predictLabels] Histograms and labels generated\n");
     printf("[predictLabels] Predicting labels...\n");
-
 
     GVector* labelsPredicted = bagOfVisualWordsManager->predictFunction(bowHistograms,bagOfVisualWordsManager->classifier);
     printf("[predictLabels] Labels predicted...\n");
@@ -504,6 +517,7 @@ void trainClassifier(std::vector<BagOfVisualWordsManager*> managers){
 
     printf("[trainClassifier] Histograms and labels generated\n");
     printf("[trainClassifier] Classifier  trainning...\n");
+ 
     managers[0]->fitFunction(bowHistograms,imagesLabels,managers[0]->classifier);
     printf("[trainClassifier] Classifier trained...\n");
 
@@ -579,7 +593,6 @@ GVector* predictLabels(std::vector<BagOfVisualWordsManager*> managers){
     printf("[predictLabels] Histograms and labels generated\n");
     printf("[predictLabels] Predicting labels...\n");
 
-
     GVector* labelsPredicted = managers[0]->predictFunction(bowHistograms,managers[0]->classifier);
     printf("[predictLabels] Labels predicted...\n");
     destroyMatrix(&bowHistograms);
@@ -606,8 +619,8 @@ GVector* computeCountHistogram_softBow(Matrix* featureMatrix,BagOfVisualWordsMan
     GVector* bowHistogram = createNullVector(bagOfVisualWordsManager->dictionary->numberRows,sizeof(float));
     double l1norm;
     double dist;
+    l1norm = 0;
     for (size_t patchIndex = 0; patchIndex < featureMatrix->numberRows; ++patchIndex) {
-        l1norm = 0;
         for (size_t wordIndex = 0; wordIndex < bagOfVisualWordsManager->dictionary->numberRows; ++wordIndex){
             dist = computeDistanceBetweenRows(featureMatrix, bagOfVisualWordsManager->dictionary,
                                               patchIndex, wordIndex);

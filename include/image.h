@@ -20,7 +20,7 @@
 
 
 enum ColorSpace {
-    UNKNOWN = 0,
+    CS_UNKNOWN = 0,
     GRAYSCALE = 1,
     GRAYSCALE_ALPHA = 2,
     RGB = 3,
