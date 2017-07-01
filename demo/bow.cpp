@@ -1,7 +1,8 @@
 #include "FL.h"
+#include <vector>
 
 int main(int argc, char **argv) {
-    size_t numberOfVisualWords = 500;
+    size_t numberOfVisualWords = 1000;
 
 
     //Caminhos onde esta o arquivo txt gerado pelo o script python "selec_samples2.py"
@@ -13,6 +14,10 @@ int main(int argc, char **argv) {
 //     char const* const fileName_createDict = "/home/akira-miasato/data/img/pubfig_train.txt";
 //     char const* const fileName_createTrain = "/home/akira-miasato/data/img/pubfig_train.txt";
 //     char const* const fileName_createTest = "/home/akira-miasato/data/img/pubfig_dev.txt";
+
+//     char const* const fileName_createDict = "/home/akira-miasato/data/img/mnist_train.txt";
+//     char const* const fileName_createTrain = "/home/akira-miasato/data/img/mnist_train.txt";
+//     char const* const fileName_createTest = "/home/akira-miasato/data/img/mnist_dev.txt";
     
     //cada posicao do vetor tem uma string para o caminho de uma imagem
     GVector* vectorSamplesUsed2CreateDict =  splitsLinesInTextFile(fileName_createDict);
@@ -44,7 +49,7 @@ int main(int argc, char **argv) {
 
     ////////////////////////////////////////////////////////////////////////
     //Passando os vetores que contem os caminhos das imagens para...
-    bowManager->pathsToImages_dictionery = vectorSamplesUsed2CreateDict;//criar o dicionario
+    bowManager->pathsToImages_dictionary = vectorSamplesUsed2CreateDict;//criar o dicionario
     bowManager->pathsToImages_train = vectorSamplesUsed2TrainClassifier;//treinar o classificador
     bowManager->pathsToImages_test = vectorSamplesUsed2TestClassifier;//testar o classificador
     //////////////////////////////////////////////////////////////////////
@@ -53,7 +58,6 @@ int main(int argc, char **argv) {
     //metodo de sampling que vai ser usado para criar os patchs. Se vc passar NULL aqui o estrutura
     // do bow vai criar um vetor de tamanho 1 onde o unico elemento desse vetor vai ser a imagem.
     bowManager->imageSamplerFunction = gridSamplingBow;//ponteiro da funcao para o sampling
-
     //Nesta demo o metodo de sampling  usado é o grid. Entao eu vou criar um argument list
     //para colocar os parametros do metodo de grinding que eu fiz.
     //Note que o cabecalho geral para a funcao de sammpling e
@@ -63,6 +67,17 @@ int main(int argc, char **argv) {
     ARGLIST_PUSH_BACK_AS(size_t,gridSamplingArguments,64); //patch size Y
     bowManager->argumentListOfSampler = gridSamplingArguments;//passando a lista de argumentos para o bow manager
     //////////////////////////////////////////////////////////
+
+//     ////////////////////////////////////////////////////////////////////
+//     //Random sampling
+//     ////////////////////////////////////////////////////////////////////
+//     bowManager->imageSamplerFunction = randomSamplingBow;//ponteiro da funcao para o sampling
+//     ArgumentList* randomSamplingArguments = createArgumentList();
+//     ARGLIST_PUSH_BACK_AS(size_t,randomSamplingArguments,64); //patch size X
+//     ARGLIST_PUSH_BACK_AS(size_t,randomSamplingArguments,64); //patch size Y
+//     ARGLIST_PUSH_BACK_AS(size_t,randomSamplingArguments,4); //number of sampled patches
+//     bowManager->argumentListOfSampler = randomSamplingArguments;//passando a lista de argumentos para o bow manager
+//     ////////////////////////////////////////////////////////
 
     /////////////////////////////////////////////////////////////////////////////
     //Essa função serve como um garbage collector para o metodo do sampling. Ao final de
@@ -75,34 +90,50 @@ int main(int argc, char **argv) {
     /////////////////////////////////////////////////
 
 
+//     /////////////////////////////////////////////////////////////////
+//     //Neste exemplo eu irei usar o descritor de cores aprendindo em aula.
+//     bowManager->featureExtractorFunction = computeColorHistogramBow;//ponteiro da funcao para a extracao de features
+//     //o meu metodo para fazer o histograma de cores recebe 2 parametros (exlcuindo vetor de entrada)
+//     //0 - vetor com as imagens dos patchs (esse argumento n'ao conta)
+//     //1 - numeros de bins por canal
+//     //2 - numero total de bins (bins por canal * numero de canais). Portanto, eu vou
+//     //criar uma argumentList e colocar dois parametros nela.
+//     //Note que o cabecalho geral para a funcao do extrator e
+//     //Matrix* MinhaFuncaoFeatureExtractor(GVector* outputSampler, BagOfVisualWordsManager* bagOfVisualWordsManager);
+//     ArgumentList* colorFeatureExtractorArguments = createArgumentList();
+//     size_t nbins = 4;
+//     ARGLIST_PUSH_BACK_AS(size_t,colorFeatureExtractorArguments,nbins); //nBins per channel
+//     ARGLIST_PUSH_BACK_AS(size_t,colorFeatureExtractorArguments,nbins*nbins*nbins); //total number of channels
+//     bowManager->argumentListOfFeatureExtractor = colorFeatureExtractorArguments; //passando a lista de argumentos do feature extractor para o bow manager
+//     ///////////////////////////////////////
+
+
+//     /////////////////////////////////////////////////////////////////
+//     // HOG
+//     bowManager->featureExtractorFunction = computeHOGPerChannelBow;//ponteiro da funcao para a extracao de features
+//     //0 - vetor com as imagens dos patchs (esse argumento n'ao conta)
+//     //1 - numeros de bins angulares
+//     ArgumentList* hogArguments = createArgumentList();
+//     size_t nbins = 9;
+//     ARGLIST_PUSH_BACK_AS(size_t, hogArguments, nbins);
+//     bowManager->argumentListOfFeatureExtractor = hogArguments;
+//     ///////////////////////////////////////
+
     /////////////////////////////////////////////////////////////////
-    //Neste exemplo eu irei usar o descritor de cores aprendindo em aula.
-    bowManager->featureExtractorFunction = computeColorHistogramBow;//ponteiro da funcao para a extracao de features
-    //o meu metodo para fazer o histograma de cores recebe 2 parametros (exlcuindo vetor de entrada)
+    // All features
+    bowManager->featureExtractorFunction = computeMergedFeats;//ponteiro da funcao para a extracao de features
     //0 - vetor com as imagens dos patchs (esse argumento n'ao conta)
-    //1 - numeros de bins por canal
-    //2 - numero total de bins (bins por canal * numero de canais). Portanto, eu vou
-    //criar uma argumentList e colocar dois parametros nela.
-    //Note que o cabecalho geral para a funcao do extrator e
-    //Matrix* MinhaFuncaoFeatureExtractor(GVector* outputSampler, BagOfVisualWordsManager* bagOfVisualWordsManager);
-    ArgumentList* colorFeatureExtractorArguments = createArgumentList();
-    size_t nbins = 4;
-    ARGLIST_PUSH_BACK_AS(size_t,colorFeatureExtractorArguments,nbins); //nBins per channel
-    ARGLIST_PUSH_BACK_AS(size_t,colorFeatureExtractorArguments,nbins*nbins*nbins); //total number of channels
-    bowManager->argumentListOfFeatureExtractor = colorFeatureExtractorArguments; //passando a lista de argumentos do feature extractor para o bow manager
+    //1 - numeros de bins de cores (colorHist)
+    //2 - numero total de bins de cores (colorHist)
+    //3 - numero de bins angulares (HOG)
+    ArgumentList* mergedArguments = createArgumentList();
+    size_t nbins = 4; // Bins de cor por canal
+    ARGLIST_PUSH_BACK_AS(size_t,mergedArguments,nbins); //nBins per channel
+    ARGLIST_PUSH_BACK_AS(size_t,mergedArguments,nbins*nbins*nbins); //total number of channels
+    nbins = 9; // Bins angulares
+    ARGLIST_PUSH_BACK_AS(size_t, mergedArguments, nbins);
+    bowManager->argumentListOfFeatureExtractor = mergedArguments;
     ///////////////////////////////////////
-
-
-// //     /////////////////////////////////////////////////////////////////
-// //     // HOG
-// //     bowManager->featureExtractorFunction = computeHOGPerChannelBow;//ponteiro da funcao para a extracao de features
-// //     //0 - vetor com as imagens dos patchs (esse argumento n'ao conta)
-// //     //1 - numeros de bins angulares
-// //     ArgumentList* hogArguments = createArgumentList();
-// //     size_t nbins = 9;
-// //     ARGLIST_PUSH_BACK_AS(size_t, hogArguments, nbins);
-// //     bowManager->argumentListOfFeatureExtractor = hogArguments;
-// //     ///////////////////////////////////////
 
     ///////////////////////////////////////////////////////
     //Existem muitas maneiras de computar distancias entre pontos e vetores. A mais comum delas talvez
@@ -124,7 +155,7 @@ int main(int argc, char **argv) {
     ArgumentList* clusteringMethodArguments = createArgumentList();
     ARGLIST_PUSH_BACK_AS(size_t,clusteringMethodArguments,numberOfVisualWords); //number of words
     ARGLIST_PUSH_BACK_AS(size_t,clusteringMethodArguments,100); //maximum number of iterations
-    ARGLIST_PUSH_BACK_AS(double,clusteringMethodArguments, 1e-8); //tolerance
+    ARGLIST_PUSH_BACK_AS(double,clusteringMethodArguments, 1e-4); //tolerance
     ARGLIST_PUSH_BACK_AS(int,clusteringMethodArguments,0); //seed
     ARGLIST_PUSH_BACK_AS(DistanceFunction,clusteringMethodArguments,computeNormalizedL1Norm); //seed
     ARGLIST_PUSH_BACK_AS(ArgumentList*,clusteringMethodArguments,NULL); //seed
@@ -133,7 +164,7 @@ int main(int argc, char **argv) {
 
     ////////////
     //computa o dicionario
-    computeDictionery(bowManager);
+    computeDictionary(bowManager);
     /////////////
 
     //////////////////////
@@ -186,25 +217,27 @@ int main(int argc, char **argv) {
 
     ///////
     //monta os histogramas, le os label e em seguida treina o classificador
-    trainClassifier(bowManager);
+    std::vector<BagOfVisualWordsManager*> bowManagerVec;
+    bowManagerVec.push_back(bowManager);
+    trainClassifier(bowManagerVec);
     //////////
 
     /////////////////////////////////////////////////////
     //monta os histogramas e usa o classificador treinado para
     //classificar as amostras do conjunto de teste
-    GVector* labelsPredicted = predictLabels(bowManager);
+    GVector* labelsPredicted = predictLabels(bowManagerVec);
     //////////////////////////
 
     //////////////////////////
     //Le os true labels das imagens e checa com os labels predizidos pelo o classificador.
     //computa uma simples acuracia (numero de amostras rotuladas corretamente / numero de amostras do conjunto)
-    GVector* trueLabels = createNullVector(bowManager->pathsToImages_test->size,sizeof(int));
+    GVector* trueLabels = createNullVector(bowManagerVec[0]->pathsToImages_test->size,sizeof(int));
     int hit = 0;
     printf("file | predicted true\t\tcorrect\n");
     char symbol;
-    for (size_t index = 0; index < bowManager->pathsToImages_test->size; ++index) {
+    for (size_t index = 0; index < bowManagerVec[0]->pathsToImages_test->size; ++index) {
         symbol = 'X';
-        char * path = VECTOR_GET_ELEMENT_AS(char*,bowManager->pathsToImages_test,index);
+        char * path = VECTOR_GET_ELEMENT_AS(char*,bowManagerVec[0]->pathsToImages_test,index);
         VECTOR_GET_ELEMENT_AS(int,trueLabels,index) = findTrueLabelInName(path);
         if(VECTOR_GET_ELEMENT_AS(int,trueLabels,index) == VECTOR_GET_ELEMENT_AS(int,labelsPredicted,index)){
             hit++;
@@ -216,11 +249,13 @@ int main(int argc, char **argv) {
                VECTOR_GET_ELEMENT_AS(int,trueLabels,index),symbol
         );
     }
-    double acuracia = ((double)hit)/bowManager->pathsToImages_test->size;
+    double acuracia = ((double)hit)/bowManagerVec[0]->pathsToImages_test->size;
     printf("acuracia: %f\n",acuracia);
     /////////////////////////////////////
 //
-    destroyBagOfVisualWordsManager(&bowManager);
+    for(BagOfVisualWordsManager* manager : bowManagerVec){
+        destroyBagOfVisualWordsManager(&manager);
+    }
     destroyVector(&trueLabels);
     destroyVector(&labelsPredicted);
     return 0;

@@ -2,6 +2,7 @@
 // Created by deangeli on 4/7/17.
 //
 #include <cmath>
+#include <iostream>
 #include "bagOfVisualWords.h"
 #include "matrixUtil.h"
 
@@ -243,6 +244,7 @@ void computeDictionary(BagOfVisualWordsManager* bagOfVisualWordsManager){
     printf("[computeDictionary] Generating visual words...\n");
     for (size_t i = 0; i < bagOfVisualWordsManager->pathsToImages_dictionary->size; ++i) {
         char* imagePath = VECTOR_GET_ELEMENT_AS(char*,bagOfVisualWordsManager->pathsToImages_dictionary,i);
+        std::cout << imagePath << std::endl;
         Image* image = readImage(imagePath);
         if(image == NULL){
             printf("[computeDictionary] invalid image path: %s",imagePath);
@@ -412,9 +414,10 @@ GVector* predictLabels(BagOfVisualWordsManager* bagOfVisualWordsManager){
             VECTOR_GET_ELEMENT_AS(Image*,samplingResults,0) = image;
         }
         Matrix* featureMatrix = bagOfVisualWordsManager->featureExtractorFunction(samplingResults, bagOfVisualWordsManager);
+
         applyMVN(featureMatrix,
-                 bagOfVisualWordsManager->means,
-                 bagOfVisualWordsManager->variances);
+                bagOfVisualWordsManager->means,
+                bagOfVisualWordsManager->variances);
 
         GVector* histogram = bagOfVisualWordsManager->mountHistogramFunction(featureMatrix,bagOfVisualWordsManager);
         setRowValueGivenVector(bowHistograms,histogram,index);

@@ -6,18 +6,30 @@ int main(int argc, char **argv) {
 
 
     // Datasets
-    char const* const fileName_createDict = "/home/akira-miasato/data/img/coil100_train.txt";
-    char const* const fileName_createTrain = "/home/akira-miasato/data/img/coil100_train.txt";
-    char const* const fileName_createTest = "/home/akira-miasato/data/img/coil100_dev.txt";
-
+//     char const* const fileName_createDict = "/home/akira-miasato/data/img/coil100_train.txt";
+//     char const* const fileName_createTrain = "/home/akira-miasato/data/img/coil100_train.txt";
+//     char const* const fileName_createTest = "/home/akira-miasato/data/img/coil100_dev.txt";
+//     size_t color_patch = 64;
+//     size_t grad_patch = 64;
+    
 //     char const* const fileName_createDict = "/home/akira-miasato/data/img/pubfig_train.txt";
 //     char const* const fileName_createTrain = "/home/akira-miasato/data/img/pubfig_train.txt";
 //     char const* const fileName_createTest = "/home/akira-miasato/data/img/pubfig_dev.txt";
+//     size_t color_patch = 25;
+//     size_t grad_patch = 50;
+    
+    char const* const fileName_createDict = "/home/akira-miasato/data/img/corel_train.txt";
+    char const* const fileName_createTrain = "/home/akira-miasato/data/img/corel_train.txt";
+    char const* const fileName_createTest= "/home/akira-miasato/data/img/corel_dev.txt";
+    size_t color_patch = 29;
+    size_t grad_patch = 29;    
 
 //     char const* const fileName_createDict = "/home/akira-miasato/data/img/mnist_train.txt";
 //     char const* const fileName_createTrain = "/home/akira-miasato/data/img/mnist_train.txt";
 //     char const* const fileName_createTest = "/home/akira-miasato/data/img/mnist_dev.txt";
 
+    
+    
     GVector* vectorSamplesUsed2CreateDict =  splitsLinesInTextFile(fileName_createDict);
     GVector* vectorSamplesUsed2TrainClassifier =  splitsLinesInTextFile(fileName_createTrain);
     GVector* vectorSamplesUsed2TestClassifier =  splitsLinesInTextFile(fileName_createTest);
@@ -41,11 +53,11 @@ int main(int argc, char **argv) {
     colorBow->pathsToImages_train = vectorSamplesUsed2TrainClassifier;//treinar o classificador
     colorBow->pathsToImages_test = vectorSamplesUsed2TestClassifier;//testar o classificador
     /////////////////////////////////////////////////////////////////////////////
-    colorBow->imageSamplerFunction = gridSamplingBow;
-    ArgumentList* gridSamplingArguments = createArgumentList();
-    ARGLIST_PUSH_BACK_AS(size_t,gridSamplingArguments,64); //patch size X
-    ARGLIST_PUSH_BACK_AS(size_t,gridSamplingArguments,64); //patch size Y
-    colorBow->argumentListOfSampler = gridSamplingArguments;//passando a lista de argumentos para o bow manager
+    colorBow->imageSamplerFunction = iftSamplingBow;
+    ArgumentList* args = createArgumentList();
+    ARGLIST_PUSH_BACK_AS(size_t,args,color_patch); //patch size X
+    ARGLIST_PUSH_BACK_AS(size_t,args,color_patch); //patch size Y
+    colorBow->argumentListOfSampler = args;//passando a lista de argumentos para o bow manager
     colorBow->freeFunction2SamplerOutput = destroyImageVoidPointer;
     /////////////////////////////////////////////////////////////////////////////
     colorBow->featureExtractorFunction = computeColorHistogramBow;//ponteiro da funcao para a extracao de features
@@ -82,16 +94,18 @@ int main(int argc, char **argv) {
     hogBow->pathsToImages_train = vectorSamplesUsed2TrainClassifier;//treinar o classificador
     hogBow->pathsToImages_test = vectorSamplesUsed2TestClassifier;//testar o classificador
     /////////////////////////////////////////////////////////////////////////////
-    hogBow->imageSamplerFunction = gridSamplingBow;
-    ArgumentList* args = createArgumentList();
-    ARGLIST_PUSH_BACK_AS(size_t,args,16); //patch size X
-    ARGLIST_PUSH_BACK_AS(size_t,args,16); //patch size Y
+    hogBow->imageSamplerFunction = randomSamplingBow;
+    args = createArgumentList();
+    ARGLIST_PUSH_BACK_AS(size_t,args,grad_patch); //patch size X
+    ARGLIST_PUSH_BACK_AS(size_t,args,grad_patch); //patch size Y
+    ARGLIST_PUSH_BACK_AS(size_t,args,20); //patch size Y
+//     ARGLIST_PUSH_BACK_AS(size_t,args,20);
     hogBow->argumentListOfSampler = args;//passando a lista de argumentos para o bow manager
     hogBow->freeFunction2SamplerOutput = destroyImageVoidPointer;
     /////////////////////////////////////////////////////////////////////////////
     hogBow->featureExtractorFunction = computeHOGBow;//ponteiro da funcao para a extracao de features
     ArgumentList* hogArguments = createArgumentList();
-    nbins = 9;
+    nbins = 18;
     ARGLIST_PUSH_BACK_AS(size_t, hogArguments, nbins);
     hogBow->argumentListOfFeatureExtractor = hogArguments;
     hogBow->argumentListOfFeatureExtractor = colorFeatureExtractorArguments; //passando a lista de argumentos do feature extractor para o bow manager
@@ -115,18 +129,6 @@ int main(int argc, char **argv) {
     hogBow->argumentListOfHistogramMounter = NULL;
     ///////////////////////
     managers.push_back(hogBow);
-
-    
-//     /////////////////////////////////////////////////////////////////
-//     // HOG
-//     bowManager->featureExtractorFunction = computeHOGPerChannelBow;//ponteiro da funcao para a extracao de features
-//     //0 - vetor com as imagens dos patchs (esse argumento n'ao conta)
-//     //1 - numeros de bins angulares
-//     ArgumentList* hogArguments = createArgumentList();
-//     size_t nbins = 9;
-//     ARGLIST_PUSH_BACK_AS(size_t, hogArguments, nbins);
-//     bowManager->argumentListOfFeatureExtractor = hogArguments;
-//     ///////////////////////////////////////
 
 
     //SVM Classifier

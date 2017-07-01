@@ -9,8 +9,9 @@ FLLIBPNGINCLUDES = -I./externals/libpng/include
 FLLIBJPEGINCLUDES = -I./externals/libjpeg/include
 FLLIBTIFFINCLUDES = -I./externals/libtiff/include
 FLLIBSVMINCLUDES = -I./externals/libsvm/include
+FLLIBISFINCLUDES = -I./externals/isf/include
 
-INCLUDEALL = $(FLLIBPNGINCLUDES) $(FLLIBJPEGINCLUDES) $(FLLIBSVMINCLUDES) -I$(INCLUDE)
+INCLUDEALL = $(FLLIBPNGINCLUDES) $(FLLIBJPEGINCLUDES) $(FLLIBSVMINCLUDES) $(FLLIBISFINCLUDES) -I$(INCLUDE)
 
 #FLAGS= -g  -O0 -Wall -D _DEBUG -Wno-unused-result -fPIC -std=gnu99 -pedantic
 FLAGS=  -O3 -DNDEBUG -Wall -Wno-unused-result -pedantic -Wno-write-strings  -fsanitize=address -fopenmp

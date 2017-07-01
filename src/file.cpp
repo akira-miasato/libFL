@@ -1,4 +1,7 @@
 #include "file.h"
+#include <vector>
+#include <iostream>
+#include <boost/algorithm/string.hpp>
 
 DirectoryManager *loadDirectory(const char *dir_pathname, size_t hier_levels) {
     DirectoryManager *dir = NULL;
@@ -30,36 +33,48 @@ DirectoryManager *loadDirectory(const char *dir_pathname, size_t hier_levels) {
 }
 
 int findTrueLabelInName(char *pathname){
-    char *posLastSlash = NULL;
-    char *posLastUnderScore = NULL;
-    //char *posLastPoint = NULL;
-    char labelNumber[10];
-    int k = 0;
-    size_t nChars;
-    posLastSlash = strrchr(pathname,'/') +1;
-    posLastUnderScore = strrchr(pathname,'_');
-
-    if(posLastSlash == NULL && posLastUnderScore == NULL){
-        return -1;
-    }if(posLastSlash == NULL){
-        nChars = posLastUnderScore-pathname;
-        for (size_t i = 0; i < nChars; ++i) {
-            labelNumber[i] = pathname[i];
-            k++;
-        }
-        labelNumber[k] = '\0';
-        int label = atoi(labelNumber);
-        return label;
-    }
-
-    nChars = posLastUnderScore - posLastSlash;
-    for (size_t i = 0; i < nChars; ++i) {
-        labelNumber[i] = posLastSlash[i];
-        k++;
-    }
-    labelNumber[k] = '\0';
-    int label = atoi(labelNumber);
-    return label;
+    using namespace std;
+    string path(pathname);
+    vector<string> strs;
+    boost::split(strs, path, boost::is_any_of("/"));
+    string fname = strs.back();
+//     cout << fname << endl;
+    boost::split(strs, fname, boost::is_any_of("__"));
+    string obj = strs[0];
+    boost::erase_all(obj, "obj");
+//     cout << obj << endl;
+    return atoi(obj.c_str());
+    
+//     char *posLastSlash = NULL;
+//     char *posLastUnderScore = NULL;
+//     //char *posLastPoint = NULL;
+//     char labelNumber[10];
+//     int k = 0;
+//     size_t nChars;
+//     posLastSlash = strrchr(pathname,'/') +1;
+//     posLastUnderScore = strrchr(pathname,'_') - 1;
+// 
+//     if(posLastSlash == NULL && posLastUnderScore == NULL){
+//         return -1;
+//     }if(posLastSlash == NULL){
+//         nChars = posLastUnderScore-pathname;
+//         for (size_t i = 0; i < nChars; ++i) {
+//             labelNumber[i] = pathname[i];
+//             k++;
+//         }
+//         labelNumber[k] = '\0';
+//         int label = atoi(labelNumber);
+//         return label;
+//     }
+// 
+//     nChars = posLastUnderScore - posLastSlash;
+//     for (size_t i = 0; i < nChars; ++i) {
+//         labelNumber[i] = posLastSlash[i];
+//         k++;
+//     }
+//     labelNumber[k] = '\0';
+//     int label = atoi(labelNumber);
+//     return label;
 }
 
 void findTrueLabelInCurrentDirectory(DirectoryManager *directoryManager){

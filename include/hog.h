@@ -4,6 +4,6 @@
 #include "vector.h"
 #include "image.h"
 
-GVector* computeHOGForFeatureVectorGivenNBins(Image *image, int nbins, bool perChannel);
+GVector* computeHOGForFeatureVectorGivenNBins(Image *image, int sX, int sY, int strideX, int strideY, int nbins, bool perChannel);
 
 #endif

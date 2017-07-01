@@ -3,6 +3,7 @@
 //
 #include <random>
 #include <vector>
+#include <stdexcept>
 #include "sampling.h"
 #include "iftPoi.h"
 
@@ -83,7 +84,7 @@ GVector* iftSampling(Image* image, size_t patchSizeX, size_t patchSizeY){
 //    "Usage: iftISF_MIX_MEAN <image.[pgm,ppm,png]> <nsamples> <alpha (e.g., [0.005-0.2])> <beta (e.g., 12)> <niters (e.g., 10)> <smooth niters (e.g., 2)> <output_image>","main");
     img  = convertImageToIftImage(image);
     normvalue =  iftNormalizationValue(iftMaximumValue(img)); 
-    label     = iftCompute_ISF_MIX_MEAN_Superpixels(img, 3, 0.1, 12, 10, 2, &(nseeds), &(niters));
+    label     = iftCompute_ISF_MIX_MEAN_Superpixels(img, 3, 0.025, 30, 3, 0, &(nseeds), &(niters));
 //     printf("[iftSampling] Ran IFT-ISF for %d iters with %d seeds\n", niters, nseeds);
     border  = iftBorderImage(label);
     int k;
@@ -91,8 +92,8 @@ GVector* iftSampling(Image* image, size_t patchSizeX, size_t patchSizeY){
     int offx, offy, minX, minY, maxX, maxY;
     std::vector<int> xIndexes;
     std::vector<int> yIndexes;
-    for(int  i=0; i< image->nx-1; i++){
-        for(int  j=0; j< image->ny-1; j++){
+    for(int  j=0; j< image->ny-1; j++){
+        for(int  i=0; i< image->nx-1; i++){
 //             printf("%02d ", iftImgElem2D(border, i, j));
             k = 4;
             v[0] = iftImgElem2D(border, i, j);
@@ -137,12 +138,19 @@ GVector* iftSampling(Image* image, size_t patchSizeX, size_t patchSizeY){
 //         printf("\n");
     }
 //     printf("\n");
-    GVector* vector_images = createNullVector(xIndexes.size(), sizeof(Image*));
-    int x, y;
-    for (int i=0; i<xIndexes.size(); i++) {
-        x = xIndexes[i] - patchSizeX / 2;
-        y = yIndexes[i] - patchSizeY / 2;
-        VECTOR_GET_ELEMENT_AS(Image*,vector_images,i) = extractSubImage(image,x,y,patchSizeX,patchSizeY,true);
+//     throw(std::runtime_error("escape"));
+    GVector* vector_images;
+    if(xIndexes.size() > 0){
+        vector_images = createNullVector(xIndexes.size(), sizeof(Image*));
+        int x, y;
+        for (int i=0; i<xIndexes.size(); i++) {
+            x = xIndexes[i] - patchSizeX / 2;
+            y = yIndexes[i] - patchSizeY / 2;
+            VECTOR_GET_ELEMENT_AS(Image*,vector_images,i) = extractSubImage(image,x,y,patchSizeX,patchSizeY,true);
+        }
+    }
+    else {
+        vector_images = randomSampling(image, patchSizeX, patchSizeY, 1);
     }
     iftDestroyImage(&label);
     iftDestroyImage(&img);
